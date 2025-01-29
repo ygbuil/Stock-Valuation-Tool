@@ -15,7 +15,7 @@ response = requests.get(url)
 
 if response.status_code == 200:
     data = response.json()
-    
+
     # Navigate the JSON response to find TTM revenue
     try:
         ttm_revenue = data["Financials"]["Income_Statement"]["ttm"]["totalRevenue"]

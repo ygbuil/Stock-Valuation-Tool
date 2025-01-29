@@ -16,7 +16,7 @@ response = requests.get(url)
 # Check if the request was successful
 if response.status_code == 200:
     data = response.json()
-    
+
     # Display the last four quarters
     for report in data[:4]:  # Get the last 4 quarters
         print(f"Date: {report['date']}")

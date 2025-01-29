@@ -8,14 +8,10 @@ load_dotenv()
 
 def f(ticker, api_key):
     url = f"https://www.alphavantage.co/query"
-    params = {
-        "function": "INCOME_STATEMENT",
-        "symbol": ticker,
-        "apikey": "aaa"
-    }
+    params = {"function": "INCOME_STATEMENT", "symbol": ticker, "apikey": "aaa"}
     response = requests.get(url, params=params)
     data = response.json()
-    
+
     return pd.DataFrame(data["quarterlyReports"])
 
 
@@ -25,13 +21,18 @@ def get_fundamental_data(ticker, api_key):
     # api_key = "YOUR_API_KEYs"
 
     # Create an instance of the FundamentalData class
-    fd = FundamentalData(key=api_key, output_format='json')
+    fd = FundamentalData(key=api_key, output_format="json")
 
     income_statement = fd.get_income_statement_quarterly(ticker)[0]
-    cash_flow_statement = fd.get_cash_flow_quarterly(ticker)[0].assign(fiscalDateEdning=lambda df: pd.Timestamp(df["fiscalDateEdning"]).strftime('%Y-%m'), freeCashflow=lambda df: pd.to_numeric(df["operatingCashflow"]) - pd.to_numeric(df["capitalExpenditures"]))["fiscalDateEnding", "freeCashflow"]
-    
+    cash_flow_statement = fd.get_cash_flow_quarterly(ticker)[0].assign(
+        fiscalDateEdning=lambda df: pd.Timestamp(df["fiscalDateEdning"]).strftime("%Y-%m"),
+        freeCashflow=lambda df: pd.to_numeric(df["operatingCashflow"])
+        - pd.to_numeric(df["capitalExpenditures"]),
+    )["fiscalDateEnding", "freeCashflow"]
 
-    cash_flow_statement["freeCashflow"] = cash_flow_statement["operatingCashflow"] - cash_flow_statement["capitalExpenditures"]
+    cash_flow_statement["freeCashflow"] = (
+        cash_flow_statement["operatingCashflow"] - cash_flow_statement["capitalExpenditures"]
+    )
 
     return income_statement, cash_flow_statement
 
