@@ -1,0 +1,16 @@
+{
+    "version": "2.0.0",
+    "configurations": [
+        {
+            "name": "Pipeline",
+            "type": "debugpy",
+            "request": "launch",
+            "justMyCode": false,
+            "program": "${workspaceFolder}/.venv/bin/stock-valuation",
+            "args": [
+                "pipeline",
+                "--ticker", "AMZN",
+            ],
+        }
+    ],
+}

@@ -1,0 +1,17 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Pipeline",
+            "type": "shell",
+            "command": "uv",
+            "args": [
+                "run",
+                "stock-valuation",
+                "pipeline",
+                "--ticker", "AMZN",
+            ],
+            "problemMatcher": []
+        }
+    ]
+}
