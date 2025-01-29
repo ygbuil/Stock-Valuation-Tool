@@ -8,13 +8,13 @@ from sklearn.linear_model import LinearRegression
 def preprocess(ticker) -> pd.DataFrame:
     income_statement = _get_income_statement_data(ticker)
     cash_flow_statement = _get_cash_flow_statement_data(ticker)
-    shares_outstanding = _get_balance_sheet_data(ticker)
+    balance_sheet = _get_balance_sheet_data(ticker)
     prices = _load_prices(ticker, pd.Timestamp("2019-01-01"))
 
     data = (
         income_statement.merge(prices, on="date", how="left")
-        .merge(cash_flow_statement, on="date", how="left")
-        .merge(shares_outstanding, on="date", how="left")
+        # .merge(cash_flow_statement, on="date", how="left")
+        # .merge(balance_sheet, on="date", how="left")
     ).assign(
         pe=lambda df: df["close_adj_origin_currency"] / df["eps"],
     )
@@ -26,10 +26,11 @@ def _get_income_statement_data(ticker) -> pd.DataFrame:
     stock = yf.Ticker(ticker)
     income_stmt = stock.income_stmt
     diluted_eps = income_stmt.loc["Diluted EPS"]
-    net_income = income_stmt.loc["Net Income"]
+    # net_income = income_stmt.loc["Net Income"]
 
     return pd.DataFrame(
-        {"date": diluted_eps.index, "eps": diluted_eps.values, "net_income": net_income.values}
+        {"date": diluted_eps.index, "eps": diluted_eps.values}
+        #  "net_income": net_income.values}
     )
 
 

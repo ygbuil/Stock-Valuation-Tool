@@ -1,5 +1,5 @@
 """Reporting package."""
 
-from ._modelling import modelling
+from ._reporting import reporting
 
-__all__ = ["modelling"]
+__all__ = ["reporting"]

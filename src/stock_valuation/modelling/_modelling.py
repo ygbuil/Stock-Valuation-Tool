@@ -7,16 +7,20 @@ from sklearn.linear_model import LinearRegression
 
 
 def modelling(data: pd.DataFrame, prices: pd.DataFrame) -> pd.DataFrame:
-    current_price, current_year = (
+    freq = "yearly"
+    current_price, year_month_current = (
         prices["close_adj_origin_currency"].iloc[0],
-        prices["date"].iloc[0].year,
+        data["date"].iloc[0],
     )
-    year_5 = current_year + 5
+    year_month_5_yrs = year_month_current + pd.DateOffset(years=5)
 
-    eps_5_yrs = _calculate_5_yrs_eps(data, year_5)
+    data_and_pred = _calculate_5_yrs_eps_and_pe(data, freq)
 
-    pe_5_yrs_ct, pe_5_yrs_mult_exp = _calculate_5_yrs_pe(data, year_5)
-
+    eps_5_yrs, pe_5_yrs_ct, pe_5_yrs_mult_exp = (
+        data_and_pred["eps"].iloc[0],
+        data_and_pred["pe_ct"].iloc[0],
+        data_and_pred["pe_exp"].iloc[0],
+    )
     price_5_yrs_ct_pe, price_5_yrs_mult_exp = (
         eps_5_yrs * pe_5_yrs_ct,
         eps_5_yrs * pe_5_yrs_mult_exp,
@@ -24,23 +28,69 @@ def modelling(data: pd.DataFrame, prices: pd.DataFrame) -> pd.DataFrame:
 
     returns = pd.DataFrame(
         [
-            {"modelling_method": "constant_pe", "price_5_yrs": price_5_yrs_ct_pe},
-            {"modelling_method": "multiple_expansion", "price_5_yrs": price_5_yrs_mult_exp},
+            {
+                "date": data_and_pred["date"].iloc[0],
+                "return_pe_ct": (
+                    data_and_pred["close_adj_origin_currency_pe_ct"].iloc[0] / current_price - 1
+                )
+                * 100,
+                "return_pe_exp": (
+                    data_and_pred["close_adj_origin_currency_pe_exp"].iloc[0] / current_price - 1
+                )
+                * 100,
+            }
         ]
-    ).assign(
-        date=year_5,
-        eps=eps_5_yrs,
-        return_5_yrs=lambda df: (df["price_5_yrs"] / current_price - 1) * 100,
-    )["date", "modelling_method", "eps", "price_5_yrs", "return_5_yrs"]
-
+    )
     return returns
 
 
-def _calculate_5_yrs_eps(data: pd.DataFrame, year_5: int) -> float:
-    X_train, y_train = list(reversed([[x.year] for x in data["date"]])), list(reversed(data["eps"]))
+def _calculate_5_yrs_eps_and_pe(data: pd.DataFrame, freq: str) -> float:
+    n_data_points = len(data)
+    pe_ct = data["pe"].mean()
+
+    X_train, y_train = [[x] for x in range(n_data_points)], list(reversed(data["eps"]))
     lin_reg_eps = _lin_reg(X_train, y_train)
 
-    return lin_reg_eps.predict([[year_5]])[0]
+    X_train, y_train = [[x] for x in range(n_data_points)], list(reversed(data["pe"]))
+    lin_reg_pe = _lin_reg(X_train, y_train)
+
+    latest_date = data["date"].iloc[0]
+    pred = []
+    for X_pred in range(
+        n_data_points, n_data_points + 5 if freq == "yearly" else n_data_points + 5 * 4
+    ):
+        latest_date = (
+            latest_date + pd.DateOffset(years=1)
+            if freq == "yearly"
+            else latest_date + pd.DateOffset(months=3)
+        )
+
+        eps_pred = lin_reg_eps.predict([[X_pred]])[0]
+        pe_exp_pred = lin_reg_pe.predict([[X_pred]])[0]
+
+        pred.append(
+            {
+                "date": latest_date,
+                "eps": eps_pred,
+                "close_adj_origin_currency_pe_ct": eps_pred * pe_ct,
+                "close_adj_origin_currency_pe_exp": eps_pred * pe_exp_pred,
+                "pe_ct": pe_ct,
+                "pe_exp": pe_exp_pred,
+            }
+        )
+
+    return pd.concat(
+        [
+            pd.DataFrame(reversed(pred)),
+            data.assign(
+                close_adj_origin_currency_pe_ct=data["close_adj_origin_currency"],
+                close_adj_origin_currency_pe_exp=data["close_adj_origin_currency"],
+                pe_ct=data["pe"],
+                pe_exp=data["pe"],
+            ).drop(columns=["pe", "close_adj_origin_currency"]),
+        ],
+        ignore_index=True,
+    )
 
 
 def _lin_reg(X_train: list[list[int]], y_train: list[float]) -> LinearRegression:
@@ -48,12 +98,3 @@ def _lin_reg(X_train: list[list[int]], y_train: list[float]) -> LinearRegression
     lin_reg.fit(X_train, y_train)
 
     return lin_reg
-
-
-def _calculate_5_yrs_pe(data: pd.DataFrame, year_5: int) -> tuple[float, float]:
-    X_train, y_train = list(reversed([[x.year] for x in data["date"]])), list(reversed(data["pe"]))
-    lin_reg_pe = _lin_reg(X_train, y_train)
-
-    pe_5_yrs = lin_reg_pe.predict([[year_5]])[0]
-
-    return data["pe"].mean(), pe_5_yrs

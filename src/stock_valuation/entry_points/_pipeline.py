@@ -3,7 +3,7 @@
 import click
 from loguru import logger
 
-from stock_valuation import modelling, preprocessing
+from stock_valuation import modelling, preprocessing, reporting
 # from stock_portfolio_tracker.utils import timer
 
 
@@ -34,5 +34,8 @@ def _pipeline(ticker: str) -> None:
 
     logger.info("Start of modelling.")
     returns = modelling.modelling(data, prices)
+
+    logger.info("Start of reporting.")
+    reporting.reporting(data, prices)
 
     logger.info("End of execution.")
