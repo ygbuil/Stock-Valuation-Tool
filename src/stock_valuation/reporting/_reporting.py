@@ -40,12 +40,10 @@ def _plot_dividends_year(data_and_pred, returns) -> None:
     offset = max(eps)*0.02
     ax.set_xlim((-0.5, time_series_dim))
     ax.set_ylim((-offset, max(eps) + offset))
-
-    # EPS legend
     ax.legend(handles=[mpatches.Patch(color="blue", label="Past EPS"), mpatches.Patch(color="orange", label="Future EPS")], loc="upper left")
+    ax.set_ylabel("Past and projected EPS")
 
     # Labels and title
-    ax.set_ylabel("Past and projected EPS")
     ax.set_title("Plot")
     ax.set_xticks(index)
     ax.set_xticklabels(dates)
@@ -55,7 +53,6 @@ def _plot_dividends_year(data_and_pred, returns) -> None:
     ax2.plot(index, close_adj_pe, color="red", marker="o", linestyle="-", label="Share price ct pe")
     ax2.set_ylabel("Share price")
     ax2.set_ylim((- offset_price, max(close_adj_pe) + offset_price))
-    # Legends
     ax2.legend(loc="upper right")
 
     # Save plot
