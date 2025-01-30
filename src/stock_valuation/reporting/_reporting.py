@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from pathlib import Path
+import matplotlib.patches as mpatches
+
 
 DIR_OUT = Path("data/out")
 
@@ -24,9 +26,9 @@ def _plot_dividends_year(data_and_pred, returns) -> None:
         list(reversed(data_and_pred["close_adj_origin_currency_pe_ct"])),
     )
 
-    n = len(eps)
+    time_series_dim = len(eps)
     bar_width = 0.4
-    index = np.arange(n)
+    index = np.arange(time_series_dim)
 
     fig, ax = plt.subplots(figsize=(12, 7))
 
@@ -36,31 +38,25 @@ def _plot_dividends_year(data_and_pred, returns) -> None:
 
     # Set y-axis limits for EPS
     offset = max(eps)*0.02
-    top_y_lim = max(eps) + offset
-    bottom_y_lim =  - offset
-    margin = (abs(top_y_lim) + abs(bottom_y_lim)) * 0.02
-    ax.set_xlim((-0.5, n))
-    ax.set_ylim((bottom_y_lim, top_y_lim))
+    ax.set_xlim((-0.5, time_series_dim))
+    ax.set_ylim((-offset, max(eps) + offset))
+
+    # EPS legend
+    ax.legend(handles=[mpatches.Patch(color="blue", label="Past EPS"), mpatches.Patch(color="orange", label="Future EPS")], loc="upper left")
 
     # Labels and title
     ax.set_ylabel("Past and projected EPS")
-    ax.set_title("Share price ct pe")
+    ax.set_title("Plot")
     ax.set_xticks(index)
     ax.set_xticklabels(dates)
 
-    # Add secondary y-axis for Close-Adjusted PE
     ax2 = ax.twinx()
-    ax2.plot(index, close_adj_pe, color="red", marker="o", linestyle="-", label="Close-Adjusted PE (CT)")
-    ax2.set_ylabel("Close-Adjusted PE")
-    
+    offset_price = max(close_adj_pe)*0.02
+    ax2.plot(index, close_adj_pe, color="red", marker="o", linestyle="-", label="Share price ct pe")
+    ax2.set_ylabel("Share price")
+    ax2.set_ylim((- offset_price, max(close_adj_pe) + offset_price))
     # Legends
-    ax.legend(["Past EPS", "Future EPS"], loc="upper left")
     ax2.legend(loc="upper right")
-
-    # Annotate EPS bars
-    y_offset = bottom_y_lim - (abs(top_y_lim) + abs(bottom_y_lim)) * 0.11
-    for i, height in zip(index, eps):
-        ax.text(i, y_offset, f"{height:.2f}", ha="center", color="black", fontweight="bold")
 
     # Save plot
     plt.savefig(DIR_OUT / "dividends_year.png", bbox_inches="tight")
