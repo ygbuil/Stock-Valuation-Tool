@@ -9,7 +9,7 @@
             "program": "${workspaceFolder}/.venv/bin/stock-valuation",
             "args": [
                 "pipeline",
-                "--ticker", "AMZN",
+                "--ticker", "MSFT",
             ],
         }
     ],

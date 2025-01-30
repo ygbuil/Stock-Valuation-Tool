@@ -11,65 +11,57 @@ def reporting(data_and_pred, returns):
 
 
 def _plot_dividends_year(data_and_pred, returns) -> None:
-    """Plot dividends year.
+    """Plot past and projected EPS along with close-adjusted PE.
 
     Args:
-        portfolio_currency: Currency of the portfolio.
-        dividends_year: Total dividends paied by year.
+        data_and_pred: DataFrame containing "date", "eps", "period", and "close_adj_origin_currency_pe_ct".
+        returns: Not used in this function.
     """
-    dates, eps, periods = (
+    dates, eps, periods, close_adj_pe = (
         list(reversed([date.strftime("%Y-%m") for date in data_and_pred["date"]])),
         list(reversed(data_and_pred["eps"])),
-        list(reversed(data_and_pred["period"])),  # "past" or "future"
+        list(reversed(data_and_pred["period"])),
+        list(reversed(data_and_pred["close_adj_origin_currency_pe_ct"])),
     )
 
     n = len(eps)
     bar_width = 0.4
     index = np.arange(n)
+
     fig, ax = plt.subplots(figsize=(12, 7))
 
     # Plot bars with respective colors
     for idx, height, period in zip(index, eps, periods):
         ax.bar(idx, height, bar_width, color="blue" if period == "past" else "orange")
 
-    top_y_lim = max(list(eps))
-    bottom_y_lim = min(list(eps))
+    # Set y-axis limits for EPS
+    offset = max(eps)*0.02
+    top_y_lim = max(eps) + offset
+    bottom_y_lim =  - offset
     margin = (abs(top_y_lim) + abs(bottom_y_lim)) * 0.02
-
-    top_y_lim += margin
-    bottom_y_lim -= margin
-    y_len = abs(top_y_lim) + abs(bottom_y_lim)
-
-    # Set fixed axis limits (frame position)
     ax.set_xlim((-0.5, n))
     ax.set_ylim((bottom_y_lim, top_y_lim))
 
-    # Add labels and title
+    # Labels and title
     ax.set_ylabel("Past and projected EPS")
-    ax.set_title("EPS")
+    ax.set_title("Share price ct pe")
     ax.set_xticks(index)
     ax.set_xticklabels(dates)
 
-    # Add legend
-    ax.legend()
+    # Add secondary y-axis for Close-Adjusted PE
+    ax2 = ax.twinx()
+    ax2.plot(index, close_adj_pe, color="red", marker="o", linestyle="-", label="Close-Adjusted PE (CT)")
+    ax2.set_ylabel("Close-Adjusted PE")
+    
+    # Legends
+    ax.legend(["Past EPS", "Future EPS"], loc="upper left")
+    ax2.legend(loc="upper right")
 
-    y_offset = bottom_y_lim - y_len * 0.11
+    # Annotate EPS bars
+    y_offset = bottom_y_lim - (abs(top_y_lim) + abs(bottom_y_lim)) * 0.11
+    for i, height in zip(index, eps):
+        ax.text(i, y_offset, f"{height:.2f}", ha="center", color="black", fontweight="bold")
 
-    for i in index:
-        plt.text(
-            i,
-            y_offset,
-            f"{eps[i]:.2f}",
-            ha="center",
-            color="black",
-            fontweight="bold",
-            rotation=0,
-        )
-
-    plt.savefig(
-        DIR_OUT
-        / Path(
-            "dividends_year.png",
-        ),
-    )
+    # Save plot
+    plt.savefig(DIR_OUT / "dividends_year.png", bbox_inches="tight")
     plt.close()

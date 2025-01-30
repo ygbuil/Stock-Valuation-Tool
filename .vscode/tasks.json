@@ -9,7 +9,7 @@
                 "run",
                 "stock-valuation",
                 "pipeline",
-                "--ticker", "AMZN",
+                "--ticker", "MSFT",
             ],
             "problemMatcher": []
         }
