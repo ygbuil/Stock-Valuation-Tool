@@ -7,24 +7,9 @@ from sklearn.linear_model import LinearRegression
 
 
 def modelling(data: pd.DataFrame, prices: pd.DataFrame) -> pd.DataFrame:
-    freq = "yearly"
-    current_price, year_month_current = (
-        prices["close_adj_origin_currency"].iloc[0],
-        data["date"].iloc[0],
-    )
-    year_month_5_yrs = year_month_current + pd.DateOffset(years=5)
+    current_price, freq = prices["close_adj_origin_currency"].iloc[0], "yearly"
 
     data_and_pred = _calculate_5_yrs_eps_and_pe(data, freq)
-
-    eps_5_yrs, pe_5_yrs_ct, pe_5_yrs_mult_exp = (
-        data_and_pred["eps"].iloc[0],
-        data_and_pred["pe_ct"].iloc[0],
-        data_and_pred["pe_exp"].iloc[0],
-    )
-    price_5_yrs_ct_pe, price_5_yrs_mult_exp = (
-        eps_5_yrs * pe_5_yrs_ct,
-        eps_5_yrs * pe_5_yrs_mult_exp,
-    )
 
     returns = pd.DataFrame(
         [
@@ -41,11 +26,12 @@ def modelling(data: pd.DataFrame, prices: pd.DataFrame) -> pd.DataFrame:
             }
         ]
     )
-    return returns
+    return data_and_pred, returns
 
 
 def _calculate_5_yrs_eps_and_pe(data: pd.DataFrame, freq: str) -> float:
     n_data_points = len(data)
+    data["period"] = "past"
     pe_ct = data["pe"].mean()
 
     X_train, y_train = [[x] for x in range(n_data_points)], list(reversed(data["eps"]))
@@ -76,6 +62,7 @@ def _calculate_5_yrs_eps_and_pe(data: pd.DataFrame, freq: str) -> float:
                 "close_adj_origin_currency_pe_exp": eps_pred * pe_exp_pred,
                 "pe_ct": pe_ct,
                 "pe_exp": pe_exp_pred,
+                "period": "future",
             }
         )
 

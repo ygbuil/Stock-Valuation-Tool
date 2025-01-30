@@ -1,33 +1,39 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from pathlib import Path
+
+DIR_OUT = Path("data/out")
 
 
-def reporting(data, returns):
-    pass
+def reporting(data_and_pred, returns):
+    _plot_dividends_year(data_and_pred, returns)
 
 
-def _plot_dividends_year(data, returns) -> None:
+def _plot_dividends_year(data_and_pred, returns) -> None:
     """Plot dividends year.
 
     Args:
         portfolio_currency: Currency of the portfolio.
         dividends_year: Total dividends paied by year.
     """
-    years, dividends = (
-        data["date"] + [pd.DateOffset(months=i * 3) for i in range(10)] + [returns["date"][0]],
-        data["eps"] + list(range(10)) + [returns["eps"][0]],
+    dates, eps, periods = (
+        list(reversed([date.strftime("%Y-%m") for date in data_and_pred["date"]])),
+        list(reversed(data_and_pred["eps"])),
+        list(reversed(data_and_pred["period"])),  # "past" or "future"
     )
-    n = len(dividends)
+
+    n = len(eps)
     bar_width = 0.4
     index = np.arange(n)
-
     fig, ax = plt.subplots(figsize=(12, 7))
 
-    ax.bar(index, dividends, bar_width, label="Dividend amount", color="blue")
+    # Plot bars with respective colors
+    for idx, height, period in zip(index, eps, periods):
+        ax.bar(idx, height, bar_width, color="blue" if period == "past" else "orange")
 
-    top_y_lim = max(list(dividends))
-    bottom_y_lim = min(list(dividends))
+    top_y_lim = max(list(eps))
+    bottom_y_lim = min(list(eps))
     margin = (abs(top_y_lim) + abs(bottom_y_lim)) * 0.02
 
     top_y_lim += margin
@@ -39,10 +45,10 @@ def _plot_dividends_year(data, returns) -> None:
     ax.set_ylim((bottom_y_lim, top_y_lim))
 
     # Add labels and title
-    ax.set_ylabel("Dividend amount (EUR)")
-    ax.set_title("Dividends per year")
+    ax.set_ylabel("Past and projected EPS")
+    ax.set_title("EPS")
     ax.set_xticks(index)
-    ax.set_xticklabels(years)
+    ax.set_xticklabels(dates)
 
     # Add legend
     ax.legend()
@@ -53,9 +59,9 @@ def _plot_dividends_year(data, returns) -> None:
         plt.text(
             i,
             y_offset,
-            f"{dividends_year['total_dividend_asset'][i]:.2f}\n{portfolio_currency}",
+            f"{eps[i]:.2f}",
             ha="center",
-            color="blue",
+            color="black",
             fontweight="bold",
             rotation=0,
         )
