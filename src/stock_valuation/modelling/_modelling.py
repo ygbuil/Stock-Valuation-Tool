@@ -1,15 +1,13 @@
-from typing import Any
-import yfinance as yf
 import pandas as pd
-from loguru import logger
-from stock_valuation.exceptions import YahooFinanceError
 from sklearn.linear_model import LinearRegression
 
 
-def modelling(data: pd.DataFrame, prices: pd.DataFrame) -> pd.DataFrame:
-    current_price, freq = prices["close_adj_origin_currency"].iloc[0], "yearly"
+def modelling(
+    data: pd.DataFrame, prices: pd.DataFrame, future_years: int, freq: str
+) -> pd.DataFrame:
+    current_price = prices["close_adj_origin_currency"].iloc[0]
 
-    data_and_pred = _calculate_5_yrs_eps_and_pe(data, freq)
+    data_and_pred = _calculate_future_eps_and_pe(data, freq, future_years)
 
     returns = pd.DataFrame(
         [
@@ -29,21 +27,22 @@ def modelling(data: pd.DataFrame, prices: pd.DataFrame) -> pd.DataFrame:
     return data_and_pred, returns
 
 
-def _calculate_5_yrs_eps_and_pe(data: pd.DataFrame, freq: str) -> float:
+def _calculate_future_eps_and_pe(data: pd.DataFrame, freq: str, future_years: int) -> float:
     n_data_points = len(data)
     data["period"] = "past"
     pe_ct = data["pe"].mean()
 
-    X_train, y_train = [[x] for x in range(n_data_points)], list(reversed(data["eps"]))
+    X_train, y_train = [[x] for x in range(n_data_points)], list(reversed(data["eps"]))  # noqa: N806
     lin_reg_eps = _lin_reg(X_train, y_train)
 
-    X_train, y_train = [[x] for x in range(n_data_points)], list(reversed(data["pe"]))
+    X_train, y_train = [[x] for x in range(n_data_points)], list(reversed(data["pe"]))  # noqa: N806
     lin_reg_pe = _lin_reg(X_train, y_train)
 
     latest_date = data["date"].iloc[0]
     pred = []
-    for X_pred in range(
-        n_data_points, n_data_points + 5 if freq == "yearly" else n_data_points + 5 * 4
+    for X_pred in range(  # noqa: N806
+        n_data_points,
+        n_data_points + future_years if freq == "yearly" else n_data_points + future_years * 4,
     ):
         latest_date = (
             latest_date + pd.DateOffset(years=1)
@@ -80,7 +79,10 @@ def _calculate_5_yrs_eps_and_pe(data: pd.DataFrame, freq: str) -> float:
     )
 
 
-def _lin_reg(X_train: list[list[int]], y_train: list[float]) -> LinearRegression:
+def _lin_reg(
+    X_train: list[list[int]],  # noqa: N803
+    y_train: list[float],
+) -> LinearRegression:
     lin_reg = LinearRegression()
     lin_reg.fit(X_train, y_train)
 

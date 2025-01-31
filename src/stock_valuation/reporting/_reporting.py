@@ -1,22 +1,23 @@
+from pathlib import Path
+
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from pathlib import Path
-import matplotlib.patches as mpatches
-
 
 DIR_OUT = Path("data/out")
 
 
-def reporting(data_and_pred, returns):
-    _plot_dividends_year(data_and_pred, returns)
+def reporting(data_and_pred: pd.DataFrame) -> None:
+    _plot_dividends_year(data_and_pred)
 
 
-def _plot_dividends_year(data_and_pred, returns) -> None:
+def _plot_dividends_year(data_and_pred: pd.DataFrame) -> None:
     """Plot past and projected EPS along with close-adjusted PE.
 
     Args:
-        data_and_pred: DataFrame containing "date", "eps", "period", and "close_adj_origin_currency_pe_ct".
+        data_and_pred: DataFrame containing "date", "eps", "period", and
+        "close_adj_origin_currency_pe_ct".
         returns: Not used in this function.
     """
     dates, eps, periods, close_adj_pe = (
@@ -33,14 +34,20 @@ def _plot_dividends_year(data_and_pred, returns) -> None:
     fig, ax = plt.subplots(figsize=(12, 7))
 
     # Plot bars with respective colors
-    for idx, height, period in zip(index, eps, periods):
+    for idx, height, period in zip(index, eps, periods, strict=False):
         ax.bar(idx, height, bar_width, color="blue" if period == "past" else "orange")
 
     # Set y-axis limits for EPS
-    offset = max(eps)*0.02
+    offset = max(eps) * 0.02
     ax.set_xlim((-0.5, time_series_dim))
     ax.set_ylim((-offset, max(eps) + offset))
-    ax.legend(handles=[mpatches.Patch(color="blue", label="Past EPS"), mpatches.Patch(color="orange", label="Future EPS")], loc="upper left")
+    ax.legend(
+        handles=[
+            mpatches.Patch(color="blue", label="Past EPS"),
+            mpatches.Patch(color="orange", label="Future EPS"),
+        ],
+        loc="upper left",
+    )
     ax.set_ylabel("Past and projected EPS")
 
     # Labels and title
@@ -49,10 +56,10 @@ def _plot_dividends_year(data_and_pred, returns) -> None:
     ax.set_xticklabels(dates)
 
     ax2 = ax.twinx()
-    offset_price = max(close_adj_pe)*0.02
+    offset_price = max(close_adj_pe) * 0.02
     ax2.plot(index, close_adj_pe, color="red", marker="o", linestyle="-", label="Share price ct pe")
     ax2.set_ylabel("Share price")
-    ax2.set_ylim((- offset_price, max(close_adj_pe) + offset_price))
+    ax2.set_ylim((-offset_price, max(close_adj_pe) + offset_price))
     ax2.legend(loc="upper right")
 
     # Save plot

@@ -1,5 +1,6 @@
-import requests
 import os
+
+import requests
 
 # Set your API key from environment variables
 api_key = os.getenv("API_KEY_FMP")

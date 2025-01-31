@@ -10,6 +10,9 @@
                 "stock-valuation",
                 "pipeline",
                 "--ticker", "MSFT",
+                "--past-years", "10",
+                "--future-years" ,"5",
+                "--freq", "ttm",
             ],
             "problemMatcher": []
         }

@@ -4,36 +4,43 @@ import click
 from loguru import logger
 
 from stock_valuation import modelling, preprocessing, reporting
-# from stock_portfolio_tracker.utils import timer
+from stock_valuation.utils import timer
 
 
 @click.command()
 @click.option("--ticker")
-def pipeline(ticker: str) -> None:
+@click.option("--past-years")
+@click.option("--future-years")
+@click.option("--freq")
+def pipeline(ticker: str, past_years: str, future_years: str, freq: str) -> None:
     """Entry point for pipeline.
 
     Args:
-        config_file_name: File name for config.
-        transactions_file_name: File name for transactions.
+        ticker: Stock ticker.
+        past_years: Number of past years to run the analisis on.
+        future_years: Number of future years to run the analisis on.
+        freq: Frequency of the data. Options: yearly, quarterly, ttm.
     """
-    _pipeline(ticker)
+    _pipeline(ticker, int(past_years), int(future_years), freq)
 
 
-# @timer
-def _pipeline(ticker: str) -> None:
+@timer
+def _pipeline(ticker: str, past_years: int, future_years: int, freq: str) -> None:
     """Execute the project end to end.
 
     Args:
-        config_file_name: File name for config.
-        transactions_file_name: File name for transactions.
+        ticker: Stock ticker.
+        past_years: Number of past years to run the analisis on.
+        future_years: Number of future years to run the analisis on.
+        freq: Frequency of the data. Options: yearly, quarterly, ttm.
     """
     logger.info("Start of execution.")
 
     logger.info("Start of preprocess.")
-    data, prices = preprocessing.preprocess(ticker)
+    data, prices = preprocessing.preprocess(ticker, past_years, freq)
 
     logger.info("Start of modelling.")
-    data_and_pred, returns = modelling.modelling(data, prices)
+    data_and_pred, returns = modelling.modelling(data, prices, future_years, freq)
 
     logger.info("Start of reporting.")
     reporting.reporting(data_and_pred, returns)
