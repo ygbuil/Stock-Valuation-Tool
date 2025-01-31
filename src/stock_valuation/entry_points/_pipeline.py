@@ -40,9 +40,9 @@ def _pipeline(ticker: str, past_years: int, future_years: int, freq: str) -> Non
     data, prices = preprocessing.preprocess(ticker, past_years, freq)
 
     logger.info("Start of modelling.")
-    data_and_pred, returns = modelling.modelling(data, prices, future_years, freq)
+    data_and_pred, _ = modelling.modelling(data, prices, future_years, freq)
 
     logger.info("Start of reporting.")
-    reporting.reporting(data_and_pred, returns)
+    reporting.reporting(data_and_pred)
 
     logger.info("End of execution.")
