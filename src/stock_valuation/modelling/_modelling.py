@@ -5,9 +5,39 @@ from sklearn.linear_model import LinearRegression
 def modelling(
     data: pd.DataFrame, prices: pd.DataFrame, future_years: int, freq: str
 ) -> pd.DataFrame:
-    current_price = prices["close_adj_origin_currency"].iloc[0]
+    current_date, current_price = (
+        prices["date"].iloc[0],
+        prices["close_adj_origin_currency"].iloc[0],
+    )
 
-    data_and_pred = _calculate_future_eps_and_pe(data, freq, future_years)
+    pred = _calculate_future_eps_and_pe(data, freq, future_years)
+
+    data = (
+        pd.concat(
+            [
+                data.iloc[[0]].assign(
+                    date=current_date, close_adj_origin_currency=current_price, period="present"
+                ),
+                data,
+            ],
+            ignore_index=True,
+        )
+        .assign(
+            close_adj_origin_currency_pe_ct=data["close_adj_origin_currency"],
+            close_adj_origin_currency_pe_exp=data["close_adj_origin_currency"],
+            pe_ct=data["pe"],
+            pe_exp=data["pe"],
+        )
+        .drop(columns=["pe", "close_adj_origin_currency"])
+    )
+
+    data_and_pred = pd.concat(
+        [
+            pred,
+            data,
+        ],
+        ignore_index=True,
+    )
 
     returns = pd.DataFrame(
         [
@@ -65,18 +95,7 @@ def _calculate_future_eps_and_pe(data: pd.DataFrame, freq: str, future_years: in
             }
         )
 
-    return pd.concat(
-        [
-            pd.DataFrame(reversed(pred)),
-            data.assign(
-                close_adj_origin_currency_pe_ct=data["close_adj_origin_currency"],
-                close_adj_origin_currency_pe_exp=data["close_adj_origin_currency"],
-                pe_ct=data["pe"],
-                pe_exp=data["pe"],
-            ).drop(columns=["pe", "close_adj_origin_currency"]),
-        ],
-        ignore_index=True,
-    )
+    return pd.DataFrame(reversed(pred))
 
 
 def _lin_reg(
