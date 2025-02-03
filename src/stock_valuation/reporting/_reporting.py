@@ -18,13 +18,13 @@ def _plot_dividends_year(data_and_pred: pd.DataFrame) -> None:
     Args:
         data_and_pred: DataFrame containing "date", "eps", "period", and
         "close_adj_origin_currency_pe_ct".
-        returns: Not used in this function.
     """
-    dates, eps, periods, close_adj_pe = (
+    dates, eps, periods, close_pe_ct, close_pe_exp = (
         list(reversed([date.strftime("%Y-%m") for date in data_and_pred["date"]])),
         list(reversed(data_and_pred["eps"])),
         list(reversed(data_and_pred["period"])),
         list(reversed(data_and_pred["close_adj_origin_currency_pe_ct"])),
+        list(reversed(data_and_pred["close_adj_origin_currency_pe_exp"])),
     )
 
     time_series_dim = len(eps)
@@ -38,9 +38,9 @@ def _plot_dividends_year(data_and_pred: pd.DataFrame) -> None:
         ax.bar(idx, height, bar_width, color="blue" if period == "past" else "orange")
 
     # Set y-axis limits for EPS
-    offset = max(eps) * 0.02
+    max_y_ax = max(eps)
     ax.set_xlim((-0.5, time_series_dim))
-    ax.set_ylim((-offset, max(eps) + offset))
+    ax.set_ylim((-max_y_ax * 0.02, max(eps) + max_y_ax * 1.2))
     ax.legend(
         handles=[
             mpatches.Patch(color="blue", label="Past EPS"),
@@ -48,7 +48,7 @@ def _plot_dividends_year(data_and_pred: pd.DataFrame) -> None:
         ],
         loc="upper left",
     )
-    ax.set_ylabel("Past and projected EPS")
+    ax.set_ylabel("Past and future EPS")
 
     # Labels and title
     ax.set_title("Plot")
@@ -56,10 +56,13 @@ def _plot_dividends_year(data_and_pred: pd.DataFrame) -> None:
     ax.set_xticklabels(dates)
 
     ax2 = ax.twinx()
-    offset_price = max(close_adj_pe) * 0.02
-    ax2.plot(index, close_adj_pe, color="red", marker="o", linestyle="-", label="Share price ct pe")
+    max_y_ax2 = max(close_pe_ct + close_pe_exp)
+    ax2.plot(index, close_pe_ct, color="red", marker="o", linestyle="-", label="Share price ct pe")
+    ax2.plot(
+        index, close_pe_exp, color="green", marker="o", linestyle="-", label="Share price ct pe"
+    )
     ax2.set_ylabel("Share price")
-    ax2.set_ylim((-offset_price, max(close_adj_pe) + offset_price))
+    ax2.set_ylim((-max_y_ax2 * 0.02, max(close_pe_ct + close_pe_exp) * 1.2))
     ax2.legend(loc="upper right")
 
     # Save plot
