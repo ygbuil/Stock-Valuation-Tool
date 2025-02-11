@@ -35,7 +35,7 @@ def _plot_dividends_year(data_and_pred: pd.DataFrame) -> None:
 
     # Create figure with 2 subplots (one on top of the other)
     fig, (eps_and_pe, price) = plt.subplots(
-        2, 1, figsize=(18, 10), sharex=True, gridspec_kw={"height_ratios": [1, 1]}
+        2, 1, figsize=(18, 10), gridspec_kw={"height_ratios": [1, 1]}
     )
 
     # Upper plot: EPS (bars) + PE (lines)
@@ -47,12 +47,15 @@ def _plot_dividends_year(data_and_pred: pd.DataFrame) -> None:
             case "past":
                 eps_and_pe.bar(idx, height, bar_width, color="blue", zorder=3)
             case "present":
-                eps_and_pe.bar(idx, height, bar_width, color="yellow", zorder=3)
+                eps_and_pe.bar(idx, height, bar_width, color="black", zorder=3)
             case "future":
                 eps_and_pe.bar(idx, height, bar_width, color="orange", zorder=3)
 
     eps_and_pe.set_ylabel("EPS")
     eps_and_pe.set_title("EPS, PE Ratio, and Share Price Trends")
+
+    eps_and_pe.set_xticks(index)
+    eps_and_pe.set_xticklabels(dates, rotation=80)
 
     # Secondary Y-axis for PE
     eps_and_peb = eps_and_pe.twinx()
@@ -66,7 +69,7 @@ def _plot_dividends_year(data_and_pred: pd.DataFrame) -> None:
     eps_and_pe.legend(
         handles=[
             mpatches.Patch(color="blue", label="Past EPS"),
-            mpatches.Patch(color="yellow", label="Current EPS"),
+            mpatches.Patch(color="black", label="Current EPS"),
             mpatches.Patch(color="orange", label="Future EPS"),
         ],
         loc="upper left",
