@@ -113,8 +113,8 @@ def _plot_funadamentals_projections(data_and_pred: pd.DataFrame) -> None:
     plt.close()
 
 
-def _plot_performance(returns):
-   # Create figure and axis
+def _plot_performance(returns: pd.DataFrame) -> None:
+    # Create figure and axis
     fig, ax = plt.subplots(figsize=(12, 7))
     ax.set_axis_off()  # Hide axes
 
