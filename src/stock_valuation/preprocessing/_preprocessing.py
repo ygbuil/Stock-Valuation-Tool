@@ -29,34 +29,6 @@ def preprocess(ticker: str, benchmark: str, past_years: str, freq: str) -> pd.Da
     return data, prices, benchmark_prices
 
 
-def _get_income_statement_data(ticker: str) -> pd.DataFrame:
-    stock = yf.Ticker(ticker)
-    income_stmt = stock.income_stmt
-    diluted_eps = income_stmt.loc["Diluted EPS"]
-
-    return pd.DataFrame({"date": diluted_eps.index, "eps": diluted_eps.to_numpy()})
-
-
-def _get_cash_flow_statement_data(ticker: str) -> pd.DataFrame:
-    stock = yf.Ticker(ticker)
-    cash_flow_statement = stock.cash_flow
-    cash_flow_statement = cash_flow_statement.loc["Free Cash Flow"]
-
-    return pd.DataFrame(
-        {"date": cash_flow_statement.index, "free_cash_flow": cash_flow_statement.to_numpy()}
-    )
-
-
-def _get_balance_sheet_data(ticker: str) -> pd.DataFrame:
-    stock = yf.Ticker(ticker)
-    balance_sheet = stock.balance_sheet
-    shares_outstanding = balance_sheet.loc["Ordinary Shares Number"]
-
-    return pd.DataFrame(
-        {"date": shares_outstanding.index, "shares_outstanding": shares_outstanding.to_numpy()}
-    )
-
-
 def _get_fundamental_data(ticker: str) -> pd.DataFrame:
     fd = FundamentalData(key="None", output_format="json")
 
@@ -82,20 +54,26 @@ def _get_fundamental_data(ticker: str) -> pd.DataFrame:
         )
     )
 
-    # cash_flow_statement = fd.get_cash_flow_quarterly(ticker)[0].assign(
-    #     fiscalDateEdning=lambda df: pd.Timestamp(df["fiscalDateEdning"]).strftime("%Y-%m"),
-    #     freeCashflow=lambda df: pd.to_numeric(df["operatingCashflow"])
-    #     - pd.to_numeric(df["capitalExpenditures"]),
-    # )["fiscalDateEnding", "freeCashflow"]
-    # cash_flow_statement["freeCashflow"] = (
-    #     cash_flow_statement["operatingCashflow"] - cash_flow_statement["capitalExpenditures"]
-    # )
-
     return (
         income_statement.merge(balance_sheet, on="date", how="left")
         .dropna()
         .assign(eps=lambda df: df["net_income"] / df["shares_outstanding"])[["date", "eps"]]
     )
+
+
+def _get_cash_flow_data(ticker: str) -> pd.DataFrame:
+    fd = FundamentalData(key="None", output_format="json")
+
+    cash_flow_statement = fd.get_cash_flow_quarterly(ticker)[0].assign(
+        fiscalDateEdning=lambda df: pd.Timestamp(df["fiscalDateEdning"]).strftime("%Y-%m"),
+        freeCashflow=lambda df: pd.to_numeric(df["operatingCashflow"])
+        - pd.to_numeric(df["capitalExpenditures"]),
+    )["fiscalDateEnding", "freeCashflow"]
+    cash_flow_statement["freeCashflow"] = (
+        cash_flow_statement["operatingCashflow"] - cash_flow_statement["capitalExpenditures"]
+    )
+
+    return cash_flow_statement
 
 
 def _calculate_ttm(data: pd.DataFrame) -> pd.DataFrame:
