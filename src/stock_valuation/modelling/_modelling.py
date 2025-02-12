@@ -62,24 +62,26 @@ def modelling(
     return data_and_pred, returns
 
 
-def _calculate_future_eps_and_pe(data: pd.DataFrame, freq: str, future_years: int, modelling: str = "linear") -> float:
+def _calculate_future_eps_and_pe(data: pd.DataFrame, freq: str, future_years: int, modelling: str = "exp") -> float:
     n_data_points = len(data)
     data["period"] = "past"
     pe_ct = data["pe"].mean()
 
     X_train, y_train = [[x] for x in range(n_data_points)], list(reversed(data["eps"]))  # noqa: N806
-    if modelling == "linear":
-        model_eps = _lin_reg(X_train, y_train)
-    else:
-        model_eps = ExponentialModel()
-        model_eps.train(y_train)
+    match modelling:
+        case "linear":
+            model_eps = _lin_reg(X_train, y_train)
+        case "exp":
+            model_eps = ExponentialModel()
+            model_eps.train(y_train)
 
     X_train, y_train = [[x] for x in range(n_data_points)], list(reversed(data["pe"]))  # noqa: N806
-    if modelling == "linear":
-        model_pe = _lin_reg(X_train, y_train)
-    else:
-        model_pe = ExponentialModel()
-        model_pe.train(y_train)
+    match modelling:
+        case "linear":
+            model_pe = _lin_reg(X_train, y_train)
+        case "exp":
+            model_pe = ExponentialModel()
+            model_pe.train(y_train)
 
     latest_date = data["date"].iloc[0]
     pred = []
@@ -93,12 +95,13 @@ def _calculate_future_eps_and_pe(data: pd.DataFrame, freq: str, future_years: in
             else latest_date + pd.DateOffset(months=3)
         )
 
-        if modelling == "linear":
-            eps_pred = model_eps.predict([[X_pred]])[0]
-            pe_exp_pred = model_pe.predict([[X_pred]])[0]
-        else:
-            eps_pred = model_eps.predict()
-            pe_exp_pred = model_pe.predict()
+        match modelling:
+            case "linear":
+                eps_pred = model_eps.predict([[X_pred]])[0]
+                pe_exp_pred = model_pe.predict([[X_pred]])[0]
+            case "exp":
+                eps_pred = model_eps.predict()
+                pe_exp_pred = model_pe.predict()
 
         pred.append(
             {
@@ -127,20 +130,15 @@ def _lin_reg(
 
 class ExponentialModel:
     def __init__(self):
-        self.growth_rate = None
         self.latest_point = None
+        self.cqgr = None
 
     def train(self, y_train):
-        growth_rates = []
-
-        for i in range(1, len(y_train)):
-            growth_rates.append(y_train[i] / y_train[i - 1])
-
-        self.growth_rate = np.mean(growth_rates)
         self.latest_point = y_train[-1]
+        self.cqgr = (y_train[-1] / y_train[0]) ** (1/len(y_train))
     
     def predict(self):
-        self.latest_point *= self.growth_rate
+        self.latest_point *= self.cqgr
         return self.latest_point
 
 
