@@ -8,11 +8,13 @@ import pandas as pd
 DIR_OUT = Path("data/out")
 
 
-def reporting(data_and_pred: pd.DataFrame) -> None:
-    _plot_dividends_year(data_and_pred)
+def reporting(data_and_pred: pd.DataFrame, returns: pd.DataFrame) -> None:
+    _plot_funadamentals_projections(data_and_pred)
+
+    _plot_performance(returns)
 
 
-def _plot_dividends_year(data_and_pred: pd.DataFrame) -> None:
+def _plot_funadamentals_projections(data_and_pred: pd.DataFrame) -> None:
     """Plot past and projected EPS along with close-adjusted PE in separate graphs.
 
     Args:
@@ -107,5 +109,28 @@ def _plot_dividends_year(data_and_pred: pd.DataFrame) -> None:
     price.set_xticklabels(dates, rotation=80)
 
     # Save image
-    plt.savefig(DIR_OUT / "dividends_year.png", bbox_inches="tight")
+    plt.savefig(DIR_OUT / "funadamentals_projections.png", bbox_inches="tight")
+    plt.close()
+
+
+def _plot_performance(returns):
+   # Create figure and axis
+    fig, ax = plt.subplots(figsize=(12, 7))
+    ax.set_axis_off()  # Hide axes
+
+    ax.table(
+        cellText=returns.values,  # type: ignore
+        colLabels=returns.columns,  # type: ignore
+        cellLoc="center",
+        loc="center",
+    )
+
+    # Adjust layout
+    plt.tight_layout()
+    plt.savefig(
+        DIR_OUT
+        / Path(
+            "returns.png",
+        ),
+    )
     plt.close()

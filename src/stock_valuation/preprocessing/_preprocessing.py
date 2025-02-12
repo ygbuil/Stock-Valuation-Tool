@@ -8,9 +8,10 @@ from loguru import logger
 from stock_valuation.exceptions import YahooFinanceError
 
 
-def preprocess(ticker: str, past_years: str, freq: str) -> pd.DataFrame:
+def preprocess(ticker: str, benchmark: str, past_years: str, freq: str) -> pd.DataFrame:
     start_date = pd.Timestamp.today().normalize() - pd.DateOffset(years=past_years)
     prices = _load_prices(ticker, start_date)
+    benchmark_prices = _load_prices(benchmark, start_date)
 
     # income_statement = _get_fundamental_data(ticker)
     # income_statement.to_csv("income_statement.csv", index=False)
@@ -25,7 +26,7 @@ def preprocess(ticker: str, past_years: str, freq: str) -> pd.DataFrame:
         pe=lambda df: df["close_adj_origin_currency"] / df["eps"],
     )
 
-    return data, prices
+    return data, prices, benchmark_prices
 
 
 def _get_income_statement_data(ticker: str) -> pd.DataFrame:

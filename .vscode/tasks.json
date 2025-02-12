@@ -10,6 +10,7 @@
                 "stock-valuation",
                 "pipeline",
                 "--ticker", "MSFT",
+                "--benchmark", "SPY",
                 "--past-years", "10",
                 "--future-years" ,"5",
                 "--freq", "ttm",
