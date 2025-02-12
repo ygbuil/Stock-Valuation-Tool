@@ -8,27 +8,27 @@ import pandas as pd
 DIR_OUT = Path("data/out")
 
 
-def reporting(data_and_pred: pd.DataFrame, returns: pd.DataFrame) -> None:
-    _plot_funadamentals_projections(data_and_pred)
+def reporting(all_fundamentals: pd.DataFrame, returns: pd.DataFrame) -> None:
+    _plot_funadamentals_projections(all_fundamentals)
 
     _plot_performance(returns)
 
 
-def _plot_funadamentals_projections(data_and_pred: pd.DataFrame) -> None:
+def _plot_funadamentals_projections(all_fundamentals: pd.DataFrame) -> None:
     """Plot past and projected EPS along with close-adjusted PE in separate graphs.
 
     Args:
-        data_and_pred: DataFrame containing "date", "eps", "period", "pe_ct", "pe_exp",
+        all_fundamentals: DataFrame containing "date", "eps", "period", "pe_ct", "pe_exp",
         "close_adj_origin_currency_pe_ct", and "close_adj_origin_currency_pe_exp".
     """
     dates, eps, periods, pe_ct, pe_exp, close_pe_ct, close_pe_exp = (
-        list(reversed([date.strftime("%Y-%m") for date in data_and_pred["date"]])),
-        list(reversed(data_and_pred["eps"])),
-        list(reversed(data_and_pred["period"])),
-        list(reversed(data_and_pred["pe_ct"])),
-        list(reversed(data_and_pred["pe_exp"])),
-        list(reversed(data_and_pred["close_adj_origin_currency_pe_ct"])),
-        list(reversed(data_and_pred["close_adj_origin_currency_pe_exp"])),
+        list(reversed([date.strftime("%Y-%m") for date in all_fundamentals["date"]])),
+        list(reversed(all_fundamentals["eps"])),
+        list(reversed(all_fundamentals["period"])),
+        list(reversed(all_fundamentals["pe_ct"])),
+        list(reversed(all_fundamentals["pe_exp"])),
+        list(reversed(all_fundamentals["close_adj_origin_currency_pe_ct"])),
+        list(reversed(all_fundamentals["close_adj_origin_currency_pe_exp"])),
     )
 
     time_series_dim = len(eps)

@@ -8,25 +8,33 @@ from loguru import logger
 from stock_valuation.exceptions import YahooFinanceError
 
 
-def preprocess(ticker: str, benchmark: str, past_years: str, freq: str) -> pd.DataFrame:
+def preprocess(
+    ticker: str, benchmark: str, past_years: str, freq: str, source: str = "csv"
+) -> pd.DataFrame:
     start_date = pd.Timestamp.today().normalize() - pd.DateOffset(years=past_years)
     prices = _load_prices(ticker, start_date)
     benchmark_prices = _load_prices(benchmark, start_date)
 
-    # income_statement = _get_fundamental_data(ticker)
-    # income_statement.to_csv("income_statement.csv", index=False)
-    income_statement = pd.read_csv("income_statement.csv").assign(
-        date=lambda df: pd.to_datetime(df["date"])
-    )
+    if source == "api":
+        income_statement = _get_fundamental_data(ticker)
+        income_statement.to_csv("income_statement.csv", index=False)
+    else:
+        income_statement = pd.read_csv("income_statement.csv").assign(
+            date=lambda df: pd.to_datetime(df["date"])
+        )
+
     if freq == "ttm":
         income_statement = _calculate_ttm(data=income_statement)
-    income_statement = income_statement[income_statement["date"] >= start_date]
 
-    data = (income_statement.merge(prices, on="date", how="left")).assign(
+    past_fundamentals = (
+        income_statement[income_statement["date"] >= start_date].merge(
+            prices, on="date", how="left"
+        )
+    ).assign(
         pe=lambda df: df["close_adj_origin_currency"] / df["eps"],
     )
 
-    return data, prices, benchmark_prices
+    return past_fundamentals, prices, benchmark_prices
 
 
 def _get_fundamental_data(ticker: str) -> pd.DataFrame:
