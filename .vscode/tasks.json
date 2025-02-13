@@ -9,7 +9,7 @@
                 "run",
                 "stock-valuation",
                 "pipeline",
-                "--ticker", "MSFT",
+                "--ticker", "PYPL",
                 "--benchmark", "SPY",
                 "--past-years", "10",
                 "--future-years" ,"5",

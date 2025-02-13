@@ -85,7 +85,7 @@ def _predict_future_funtamentals(
 ) -> pd.DataFrame:
     past_periods = len(past_fundamentals)
     past_fundamentals["period"] = "past"
-    pe_ct = past_fundamentals["pe"].mean()
+    pe_ct = past_fundamentals["pe"].median()
 
     X, y_eps, y_pe = (  # noqa: N806
         [[x] for x in range(past_periods)],
