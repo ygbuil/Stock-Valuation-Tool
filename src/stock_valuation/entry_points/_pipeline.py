@@ -40,13 +40,13 @@ def _pipeline(ticker: str, benchmark: str, past_years: int, future_years: int, f
     logger.info("Start of execution.")
 
     logger.info("Start of preprocess.")
-    past_fundamentals, prices, benchmark_prices = preprocessing.preprocess(
+    config, past_fundamentals, prices, benchmark_prices = preprocessing.preprocess(
         ticker, benchmark, past_years, freq
     )
 
     logger.info("Start of modelling.")
     all_fundamentals, returns = modelling.modelling(
-        past_fundamentals, prices, benchmark_prices, future_years, freq
+        config, past_fundamentals, prices, benchmark_prices, future_years, freq
     )
 
     logger.info("Start of reporting.")

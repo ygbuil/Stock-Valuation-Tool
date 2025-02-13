@@ -1,0 +1,6 @@
+{
+    "modelling": {
+        "eps": "exp",
+        "pe": "linear"
+    }
+}

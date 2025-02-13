@@ -1,5 +1,5 @@
 """__init__.py for exceptions package."""
 
-from ._exceptions import UnsortedError, YahooFinanceError
+from ._exceptions import InvalidOptionError, UnsortedError, YahooFinanceError
 
-__all__ = ["UnsortedError", "YahooFinanceError"]
+__all__ = ["InvalidOptionError", "UnsortedError", "YahooFinanceError"]

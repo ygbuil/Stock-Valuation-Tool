@@ -1,22 +1,28 @@
 import numpy as np
 import pandas as pd
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
+from sklearn.linear_model import LinearRegression  # type: ignore
+from sklearn.metrics import mean_squared_error  # type: ignore
+
+from stock_valuation.exceptions import InvalidOptionError
+from stock_valuation.utils import Config
 
 
 def modelling(
+    config: Config,
     past_fundamentals: pd.DataFrame,
     prices: pd.DataFrame,
     benchmark_prices: pd.DataFrame,
     future_years: int,
     freq: str,
-) -> pd.DataFrame:
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     current_date, current_price = (
         prices["date"].iloc[0],
         prices["close_adj_origin_currency"].iloc[0],
     )
 
-    predicted_fundamentals = _predict_future_funtamentals(past_fundamentals, freq, future_years)
+    predicted_fundamentals = _predict_future_funtamentals(
+        past_fundamentals, freq, future_years, config.modelling
+    )
 
     past_fundamentals = (
         pd.concat(
@@ -75,8 +81,8 @@ def _predict_future_funtamentals(
     past_fundamentals: pd.DataFrame,
     freq: str,
     future_years: int,
-    modelling: str = {"eps": "exp", "pe": "linear"},
-) -> float:
+    modelling: dict[str, str],
+) -> pd.DataFrame:
     past_periods = len(past_fundamentals)
     past_fundamentals["period"] = "past"
     pe_ct = past_fundamentals["pe"].mean()
@@ -105,15 +111,15 @@ def _predict_future_funtamentals(
 
         match modelling["pe"]:
             case "linear":
-                pe_exp_pred = model_pe.predict([[X_pred]])[0]
+                pe_exp_pred = model_pe.predict([[X_pred]])[0]  # type: ignore
             case "exp":
-                pe_exp_pred = model_pe.predict(i + 1)[-1]
+                pe_exp_pred = model_pe.predict(i + 1)[-1]  # type: ignore
 
         match modelling["eps"]:
             case "linear":
-                eps_pred = model_eps.predict([[X_pred]])[0]
+                eps_pred = model_eps.predict([[X_pred]])[0]  # type: ignore
             case "exp":
-                eps_pred = model_eps.predict(i + 1)[-1]
+                eps_pred = model_eps.predict(i + 1)[-1]  # type: ignore
 
         pred.append(
             {
@@ -140,16 +146,27 @@ def _lin_reg(
     return lin_reg
 
 
+class LinReg:
+    def __init__(self) -> None:
+        self.lin_reg = LinearRegression()
+
+    def train(self, X_train: list[list[int]], y_train: list[float]) -> None:  # noqa: N803
+        self.lin_reg.fit(X_train, y_train)
+
+    def predict(self, value: list[list[int]]) -> float:
+        return self.lin_reg.predict(value)  # type: ignore
+
+
 class ExponentialModel:
     def __init__(self) -> None:
-        self.latest_point = None
-        self.cqgr = None
+        self.latest_point = 0.0
+        self.cqgr = 0.0
 
     def train(self, y_train: list[float]) -> None:
         self.latest_point = y_train[-1]
         self.cqgr = (y_train[-1] / y_train[0]) ** (1 / len(y_train))
 
-    def predict(self, periods: int) -> list[float | None]:
+    def predict(self, periods: int) -> list[float]:
         pred = [self.latest_point]
 
         for _ in range(periods):
@@ -159,19 +176,21 @@ class ExponentialModel:
 
 
 def _model_selection(
-    modelling: dict[str:str],
-    X: list[list[float]],  # noqa: N803
+    modelling: dict[str, str],
+    X: list[list[int]],  # noqa: N803
     y: list[float],
     past_periods: int,
     modelling_type: str,
-) -> LinearRegression | ExponentialModel | None:
+) -> LinReg | ExponentialModel:
     match modelling[modelling_type]:
         case "linear":
-            return _lin_reg(X, y)
+            lin_reg = LinReg()
+            lin_reg.train(X, y)
+            return lin_reg
         case "exp":
-            model = ExponentialModel()
-            model.train(y)
-            return model
+            exp = ExponentialModel()
+            exp.train(y)
+            return exp
         case "auto":
             train_size = int(past_periods * 0.8)
             X_train, X_test, y_train, y_test = (  # noqa: N806
@@ -181,7 +200,8 @@ def _model_selection(
                 y[train_size:],
             )
 
-            lin_reg = _lin_reg(X_train, y_train)
+            lin_reg = LinReg()
+            lin_reg.train(X_train, y_train)
             rmse_lin_reg = np.sqrt(mean_squared_error(lin_reg.predict(X_test), y_test))
 
             exp = ExponentialModel()
@@ -190,12 +210,16 @@ def _model_selection(
 
             if rmse_lin_reg < rmse_exp:
                 modelling[modelling_type] = "linear"
-                return _lin_reg(X, y)
+                lin_reg = LinReg()
+                lin_reg.train(X, y)
+                return lin_reg
 
             modelling[modelling_type] = "exp"
             exp = ExponentialModel()
             exp.train(y)
             return exp
+        case _:
+            raise InvalidOptionError
 
 
 def _model_benchmark_returns(benchmark_prices: pd.DataFrame) -> float:
@@ -205,9 +229,12 @@ def _model_benchmark_returns(benchmark_prices: pd.DataFrame) -> float:
         benchmark_prices: DataFrame containing "date" and "close_adj_origin_currency".
 
     Returns:
-        _description_
+        CAGR.
     """
-    return (
-        benchmark_prices["close_adj_origin_currency"].iloc[0]
-        / benchmark_prices["close_adj_origin_currency"].iloc[-1]
-    ) ** (1 / (len(benchmark_prices) / 365))
+    return float(
+        (
+            benchmark_prices["close_adj_origin_currency"].iloc[0]
+            / benchmark_prices["close_adj_origin_currency"].iloc[-1]
+        )
+        ** (1 / (len(benchmark_prices) / 365))
+    )

@@ -4,7 +4,7 @@
 class YahooFinanceError(Exception):
     """Error with the Yahoo Finance API."""
 
-    def __init__(self: "YahooFinanceError", msg: None | str = None) -> None:
+    def __init__(self, msg: None | str = None) -> None:
         """Provide the error message or return default.
 
         Args:
@@ -17,7 +17,7 @@ class YahooFinanceError(Exception):
 class UnsortedError(Exception):
     """Error with data sorting."""
 
-    def __init__(self: "UnsortedError", msg: None | str = None) -> None:
+    def __init__(self, msg: None | str = None) -> None:
         """Provide the error message or return default.
 
         Args:
@@ -25,3 +25,16 @@ class UnsortedError(Exception):
             msg: Custom error message. Defaults to None.
         """
         super().__init__(msg or "The data is not sorted as expected.")
+
+
+class InvalidOptionError(Exception):
+    """Provided an invalid option."""
+
+    def __init__(self, msg: None | str = None) -> None:
+        """Provide the error message or return default.
+
+        Args:
+            self: Own class.
+            msg: Custom error message. Defaults to None.
+        """
+        super().__init__(msg or "The option provided is not valid.")

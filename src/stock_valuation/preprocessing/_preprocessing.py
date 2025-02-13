@@ -1,17 +1,22 @@
 """Preprocessing module."""
 
+import json
+from pathlib import Path
+
 import pandas as pd
-import yfinance as yf
-from alpha_vantage.fundamentaldata import FundamentalData
+import yfinance as yf  # type: ignore
+from alpha_vantage.fundamentaldata import FundamentalData  # type: ignore
 from loguru import logger
 
 from stock_valuation.exceptions import YahooFinanceError
+from stock_valuation.utils import Config
 
 
 def preprocess(
-    ticker: str, benchmark: str, past_years: str, freq: str, source: str = "csv"
-) -> pd.DataFrame:
+    ticker: str, benchmark: str, past_years: int, freq: str, source: str = "csv"
+) -> tuple[Config, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     start_date = pd.Timestamp.today().normalize() - pd.DateOffset(years=past_years)
+    config = _load_config(Path("config/config.json"))
     prices = _load_prices(ticker, start_date)
     benchmark_prices = _load_prices(benchmark, start_date)
 
@@ -34,13 +39,27 @@ def preprocess(
         pe=lambda df: df["close_adj_origin_currency"] / df["eps"],
     )
 
-    return past_fundamentals, prices, benchmark_prices
+    return config, past_fundamentals, prices, benchmark_prices
+
+
+def _load_config(config_path: Path) -> Config:
+    """Load config.json.
+
+    Args:
+        config_path: Config file name.
+
+    Returns:
+        Config dataclass with the info of config.json.
+    """
+    with (config_path).open() as file:
+        config = json.load(file)
+        return Config(modelling=config["modelling"])
 
 
 def _get_fundamental_data(ticker: str) -> pd.DataFrame:
     fd = FundamentalData(key="None", output_format="json")
 
-    income_statement = (
+    income_statement: pd.DataFrame = (
         fd.get_income_statement_quarterly(ticker)[0][["fiscalDateEnding", "netIncome"]]
         .rename({"fiscalDateEnding": "date", "netIncome": "net_income"}, axis=1)
         .assign(
@@ -72,7 +91,7 @@ def _get_fundamental_data(ticker: str) -> pd.DataFrame:
 def _get_cash_flow_data(ticker: str) -> pd.DataFrame:
     fd = FundamentalData(key="None", output_format="json")
 
-    cash_flow_statement = fd.get_cash_flow_quarterly(ticker)[0].assign(
+    cash_flow_statement: pd.DataFrame = fd.get_cash_flow_quarterly(ticker)[0].assign(
         fiscalDateEdning=lambda df: pd.Timestamp(df["fiscalDateEdning"]).strftime("%Y-%m"),
         freeCashflow=lambda df: pd.to_numeric(df["operatingCashflow"])
         - pd.to_numeric(df["capitalExpenditures"]),
@@ -148,15 +167,13 @@ def _load_prices(
         msg = f"Something went wrong retrieving Yahoo Finance data for ticker {ticker}: {exc}"
         raise YahooFinanceError(msg) from exc
 
-    asset_data = full_date_range.merge(
+    return full_date_range.merge(
         asset_data,
         "left",
         on="date",
     ).assign(
         close_adj_origin_currency=lambda df: df["close_adj_origin_currency"].bfill().ffill(),
-    )
-
-    return asset_data[
+    )[
         [
             "date",
             "close_adj_origin_currency",
