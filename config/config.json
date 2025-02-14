@@ -1,6 +1,9 @@
 {
     "modelling": {
-        "eps": "linear",
+        "eps": "auto",
         "pe": "linear"
-    }
+    },
+    "past_years": 10,
+    "future_years": 5,
+    "freq": "ttm"
 }

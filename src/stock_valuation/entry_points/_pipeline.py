@@ -10,43 +10,37 @@ from stock_valuation.utils import timer
 @click.command()
 @click.option("--ticker")
 @click.option("--benchmark")
-@click.option("--past-years")
-@click.option("--future-years")
-@click.option("--freq")
-def pipeline(ticker: str, benchmark: str, past_years: str, future_years: str, freq: str) -> None:
+@click.option("--data-source")
+def pipeline(ticker: str, benchmark: str, data_source: str) -> None:
     """Entry point for pipeline.
 
     Args:
         ticker: Stock ticker.
         benchmark: Benchmark ticker.
-        past_years: Number of past years to run the analisis on.
-        future_years: Number of future years to run the analisis on.
-        freq: Frequency of the data. Options: yearly, quarterly, ttm.
+        data_source: Source for the fundamentals data. Options: api, csv.
     """
-    _pipeline(ticker, benchmark, int(past_years), int(future_years), freq)
+    _pipeline(ticker, benchmark, data_source)
 
 
 @timer
-def _pipeline(ticker: str, benchmark: str, past_years: int, future_years: int, freq: str) -> None:
+def _pipeline(ticker: str, benchmark: str, data_source: str) -> None:
     """Execute the project end to end.
 
     Args:
         ticker: Stock ticker.
         benchmark: Benchmark ticker.
-        past_years: Number of past years to run the analisis on.
-        future_years: Number of future years to run the analisis on.
-        freq: Frequency of the data. Options: yearly, quarterly, ttm.
+        data_source: Source for the fundamentals data. Options: api, csv.
     """
     logger.info("Start of execution.")
 
     logger.info("Start of preprocess.")
     config, past_fundamentals, prices, benchmark_prices = preprocessing.preprocess(
-        ticker, benchmark, past_years, freq
+        ticker, benchmark, data_source
     )
 
     logger.info("Start of modelling.")
     all_fundamentals, returns = modelling.modelling(
-        config, past_fundamentals, prices, benchmark_prices, future_years, freq
+        config, past_fundamentals, prices, benchmark_prices
     )
 
     logger.info("Start of reporting.")

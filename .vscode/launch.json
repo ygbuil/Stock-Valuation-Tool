@@ -9,11 +9,9 @@
             "program": "${workspaceFolder}/.venv/bin/stock-valuation",
             "args": [
                 "pipeline",
-                "--ticker", "MSFT",
+                "--ticker", "META",
                 "--benchmark", "SPY",
-                "--past-years", "10",
-                "--future-years" ,"5",
-                "--freq", "ttm",
+                "--data-source", "csv",
             ],
         }
     ],

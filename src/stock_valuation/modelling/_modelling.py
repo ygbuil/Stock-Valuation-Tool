@@ -12,17 +12,13 @@ def modelling(
     past_fundamentals: pd.DataFrame,
     prices: pd.DataFrame,
     benchmark_prices: pd.DataFrame,
-    future_years: int,
-    freq: str,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     current_date, current_price = (
         prices["date"].iloc[0],
         prices["close_adj_origin_currency"].iloc[0],
     )
 
-    predicted_fundamentals = _predict_future_funtamentals(
-        past_fundamentals, freq, future_years, config.modelling
-    )
+    predicted_fundamentals = _predict_future_funtamentals(config, past_fundamentals)
 
     past_fundamentals = (
         pd.concat(
@@ -35,10 +31,10 @@ def modelling(
             ignore_index=True,
         )
         .assign(
-            close_adj_origin_currency_pe_ct=past_fundamentals["close_adj_origin_currency"],
-            close_adj_origin_currency_pe_exp=past_fundamentals["close_adj_origin_currency"],
-            pe_ct=past_fundamentals["pe"],
-            pe_exp=past_fundamentals["pe"],
+            close_adj_origin_currency_pe_ct=lambda df: df["close_adj_origin_currency"],
+            close_adj_origin_currency_pe_exp=lambda df: df["close_adj_origin_currency"],
+            pe_ct=lambda df: df["pe"],
+            pe_exp=lambda df: df["pe"],
         )
         .drop(columns=["pe", "close_adj_origin_currency"])
     )
@@ -78,10 +74,8 @@ def modelling(
 
 
 def _predict_future_funtamentals(
+    config: Config,
     past_fundamentals: pd.DataFrame,
-    freq: str,
-    future_years: int,
-    modelling: dict[str, str],
 ) -> pd.DataFrame:
     past_periods = len(past_fundamentals)
     past_fundamentals["period"] = "past"
@@ -92,30 +86,32 @@ def _predict_future_funtamentals(
         list(reversed(past_fundamentals["eps"])),
         list(reversed(past_fundamentals["pe"])),
     )
-    model_eps = _model_selection(modelling, X, y_eps, past_periods, "eps")
-    model_pe = _model_selection(modelling, X, y_pe, past_periods, "pe")
+    model_eps = _model_selection(config.modelling, X, y_eps, past_periods, "eps")
+    model_pe = _model_selection(config.modelling, X, y_pe, past_periods, "pe")
 
     last_period_date = past_fundamentals["date"].iloc[0]
     pred = []
     for i, X_pred in enumerate(  # noqa: N806
         range(
             past_periods,
-            past_periods + future_years if freq == "yearly" else past_periods + future_years * 4,
+            past_periods + config.future_years
+            if config.freq == "yearly"
+            else past_periods + config.future_years * 4,
         )
     ):
         last_period_date = (
             last_period_date + pd.DateOffset(years=1)
-            if freq == "yearly"
+            if config.freq == "yearly"
             else last_period_date + pd.DateOffset(months=3)
         )
 
-        match modelling["pe"]:
+        match config.modelling["pe"]:
             case "linear":
                 pe_exp_pred = model_pe.predict([[X_pred]])[0]  # type: ignore
             case "exp":
                 pe_exp_pred = model_pe.predict(i + 1)[-1]  # type: ignore
 
-        match modelling["eps"]:
+        match config.modelling["eps"]:
             case "linear":
                 eps_pred = model_eps.predict([[X_pred]])[0]  # type: ignore
             case "exp":
@@ -134,16 +130,6 @@ def _predict_future_funtamentals(
         )
 
     return pd.DataFrame(reversed(pred))
-
-
-def _lin_reg(
-    X_train: list[list[int]],  # noqa: N803
-    y_train: list[float],
-) -> LinearRegression:
-    lin_reg = LinearRegression()
-    lin_reg.fit(X_train, y_train)
-
-    return lin_reg
 
 
 class LinReg:

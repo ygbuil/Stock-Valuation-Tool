@@ -13,14 +13,14 @@ from stock_valuation.utils import Config
 
 
 def preprocess(
-    ticker: str, benchmark: str, past_years: int, freq: str, source: str = "csv"
+    ticker: str, benchmark: str, data_source: str
 ) -> tuple[Config, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    start_date = pd.Timestamp.today().normalize() - pd.DateOffset(years=past_years)
     config = _load_config(Path("config/config.json"))
+    start_date = pd.Timestamp.today().normalize() - pd.DateOffset(years=config.past_years)
     prices = _load_prices(ticker, start_date)
     benchmark_prices = _load_prices(benchmark, start_date)
 
-    if source == "api":
+    if data_source == "api":
         income_statement = _get_fundamental_data(ticker)
         income_statement.to_csv("income_statement.csv", index=False)
     else:
@@ -28,7 +28,7 @@ def preprocess(
             date=lambda df: pd.to_datetime(df["date"])
         )
 
-    if freq == "ttm":
+    if config.freq == "ttm":
         income_statement = _calculate_ttm(data=income_statement)
 
     past_fundamentals = (
@@ -52,8 +52,7 @@ def _load_config(config_path: Path) -> Config:
         Config dataclass with the info of config.json.
     """
     with (config_path).open() as file:
-        config = json.load(file)
-        return Config(modelling=config["modelling"])
+        return Config(**json.load(file))
 
 
 def _get_fundamental_data(ticker: str) -> pd.DataFrame:
