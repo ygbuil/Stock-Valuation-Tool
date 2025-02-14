@@ -11,22 +11,28 @@ from loguru import logger
 from stock_valuation_tool.exceptions import YahooFinanceError
 from stock_valuation_tool.utils import Config
 
+PATH_DATA_IN = Path("data/in")
+
 
 def preprocess(
     ticker: str, benchmark: str, data_source: str
 ) -> tuple[Config, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     config = _load_config(Path("config/config.json"))
+
     start_date = pd.Timestamp.today().normalize() - pd.DateOffset(years=config.past_years)
     prices = _load_prices(ticker, start_date)
+
     benchmark_prices = _load_prices(benchmark, start_date)
 
     if data_source == "api":
         income_statement = _get_fundamental_data(ticker)
-        income_statement.to_csv("income_statement.csv", index=False)
-    else:
-        income_statement = pd.read_csv("income_statement.csv").assign(
-            date=lambda df: pd.to_datetime(df["date"])
+        income_statement.to_csv(
+            PATH_DATA_IN / f"income_statement_{ticker.replace('.', '')}.csv", index=False
         )
+    else:
+        income_statement = pd.read_csv(
+            PATH_DATA_IN / f"income_statement_{ticker.replace('.', '')}.csv"
+        ).assign(date=lambda df: pd.to_datetime(df["date"]))
 
     if config.freq == "ttm":
         income_statement = _calculate_ttm(data=income_statement)

@@ -44,6 +44,6 @@ def _pipeline(ticker: str, benchmark: str, data_source: str) -> None:
     )
 
     logger.info("Start of reporting.")
-    reporting.reporting(all_fundamentals, returns)
+    reporting.reporting(config, all_fundamentals, returns)
 
     logger.info("End of execution.")

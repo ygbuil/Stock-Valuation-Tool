@@ -5,19 +5,22 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from stock_valuation_tool.utils import Config
+
 DIR_OUT = Path("data/out")
 
 
-def reporting(all_fundamentals: pd.DataFrame, returns: pd.DataFrame) -> None:
-    _plot_funadamentals_projections(all_fundamentals)
+def reporting(config: Config, all_fundamentals: pd.DataFrame, returns: pd.DataFrame) -> None:
+    _plot_funadamentals_projections(config, all_fundamentals)
 
     _plot_performance(returns)
 
 
-def _plot_funadamentals_projections(all_fundamentals: pd.DataFrame) -> None:
+def _plot_funadamentals_projections(config: Config, all_fundamentals: pd.DataFrame) -> None:
     """Plot past and projected EPS along with close-adjusted PE in separate graphs.
 
     Args:
+        config: Config dataclass with modelling info.
         all_fundamentals: DataFrame containing "date", "eps", "period", "pe_ct", "pe_exp",
         "close_adj_origin_currency_pe_ct", and "close_adj_origin_currency_pe_exp".
     """
@@ -62,9 +65,23 @@ def _plot_funadamentals_projections(all_fundamentals: pd.DataFrame) -> None:
     # Secondary Y-axis for PE
     eps_and_peb = eps_and_pe.twinx()
     eps_and_peb.plot(
-        index, pe_exp, color="green", marker="s", linestyle="-", label="PE EXP", zorder=2
+        index,
+        pe_exp,
+        color="green",
+        marker="s",
+        linestyle="-",
+        label=f"PE (modelling: {config.modelling['pe']})",
+        zorder=2,
     )
-    eps_and_peb.plot(index, pe_ct, color="red", marker="s", linestyle="-", label="PE CT", zorder=2)
+    eps_and_peb.plot(
+        index,
+        pe_ct,
+        color="red",
+        marker="s",
+        linestyle="-",
+        label=f"PE (modelling: {config.pe_ct})",
+        zorder=2,
+    )
     eps_and_peb.set_ylabel("PE Ratio")
 
     # Legends
@@ -72,7 +89,9 @@ def _plot_funadamentals_projections(all_fundamentals: pd.DataFrame) -> None:
         handles=[
             mpatches.Patch(color="blue", label="Past EPS"),
             mpatches.Patch(color="black", label="Current EPS"),
-            mpatches.Patch(color="orange", label="Future EPS"),
+            mpatches.Patch(
+                color="orange", label=f"Future EPS (modelling: {config.modelling['eps']})"
+            ),
         ],
         loc="upper left",
     )

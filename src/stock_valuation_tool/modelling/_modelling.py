@@ -79,15 +79,15 @@ def _predict_future_funtamentals(
 ) -> pd.DataFrame:
     past_periods = len(past_fundamentals)
     past_fundamentals["period"] = "past"
-    pe_ct = past_fundamentals["pe"].median()
+    pe_ct = past_fundamentals["pe"].median() if config.pe_ct == "median" else int(config.pe_ct)
 
     X, y_eps, y_pe = (  # noqa: N806
         [[x] for x in range(past_periods)],
         list(reversed(past_fundamentals["eps"])),
         list(reversed(past_fundamentals["pe"])),
     )
-    model_eps = _model_selection(config.modelling, X, y_eps, past_periods, "eps")
-    model_pe = _model_selection(config.modelling, X, y_pe, past_periods, "pe")
+    model_eps = _model_selection(config, X, y_eps, past_periods, "eps")
+    model_pe = _model_selection(config, X, y_pe, past_periods, "pe")
 
     last_period_date = past_fundamentals["date"].iloc[0]
     pred = []
@@ -162,13 +162,13 @@ class ExponentialModel:
 
 
 def _model_selection(
-    modelling: dict[str, str],
+    config: Config,
     X: list[list[int]],  # noqa: N803
     y: list[float],
     past_periods: int,
     modelling_type: str,
 ) -> LinReg | ExponentialModel:
-    match modelling[modelling_type]:
+    match config.modelling[modelling_type]:
         case "linear":
             lin_reg = LinReg()
             lin_reg.train(X, y)
@@ -195,12 +195,12 @@ def _model_selection(
             rmse_exp = np.sqrt(mean_squared_error(exp.predict(len(y_test)), y_test))
 
             if rmse_lin_reg < rmse_exp:
-                modelling[modelling_type] = "linear"
+                config.modelling[modelling_type] = "linear"
                 lin_reg = LinReg()
                 lin_reg.train(X, y)
                 return lin_reg
 
-            modelling[modelling_type] = "exp"
+            config.modelling[modelling_type] = "exp"
             exp = ExponentialModel()
             exp.train(y)
             return exp

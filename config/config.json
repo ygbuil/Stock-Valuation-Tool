@@ -1,9 +1,10 @@
 {
     "modelling": {
-        "eps": "auto",
+        "eps": "exp",
         "pe": "linear"
     },
     "past_years": 10,
     "future_years": 5,
-    "freq": "ttm"
+    "freq": "ttm",
+    "pe_ct": "140"
 }

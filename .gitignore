@@ -21,3 +21,5 @@ __pycache__/
 # project
 /data/out/*
 !/data/out/.gitkeep
+/data/in/*
+!/data/in/.gitkeep
