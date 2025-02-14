@@ -7,7 +7,7 @@
             "command": "uv",
             "args": [
                 "run",
-                "stock-valuation",
+                "stock-valuation-tool",
                 "pipeline",
                 "--ticker", "META",
                 "--benchmark", "SPY",

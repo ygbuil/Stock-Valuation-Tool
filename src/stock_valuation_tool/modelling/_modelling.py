@@ -3,8 +3,8 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression  # type: ignore
 from sklearn.metrics import mean_squared_error  # type: ignore
 
-from stock_valuation.exceptions import InvalidOptionError
-from stock_valuation.utils import Config
+from stock_valuation_tool.exceptions import InvalidOptionError
+from stock_valuation_tool.utils import Config
 
 
 def modelling(

@@ -1,5 +1,5 @@
 [project]
-name = "stock-valuation"
+name = "stock-valuation-tool"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -16,7 +16,7 @@ dependencies = [
 ]
 
 [project.scripts]
-stock-valuation = "stock_valuation.__main__:_main"
+stock-valuation-tool = "stock_valuation_tool.__main__:_main"
 
 [tool.uv]
 package = true

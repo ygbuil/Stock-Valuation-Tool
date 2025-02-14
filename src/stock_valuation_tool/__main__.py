@@ -2,7 +2,7 @@
 
 import click
 
-from stock_valuation import entry_points
+from stock_valuation_tool import entry_points
 
 
 def _main() -> None:

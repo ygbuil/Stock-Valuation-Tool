@@ -3,8 +3,8 @@
 import click
 from loguru import logger
 
-from stock_valuation import modelling, preprocessing, reporting
-from stock_valuation.utils import timer
+from stock_valuation_tool import modelling, preprocessing, reporting
+from stock_valuation_tool.utils import timer
 
 
 @click.command()

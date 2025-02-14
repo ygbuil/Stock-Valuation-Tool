@@ -8,8 +8,8 @@ import yfinance as yf  # type: ignore
 from alpha_vantage.fundamentaldata import FundamentalData  # type: ignore
 from loguru import logger
 
-from stock_valuation.exceptions import YahooFinanceError
-from stock_valuation.utils import Config
+from stock_valuation_tool.exceptions import YahooFinanceError
+from stock_valuation_tool.utils import Config
 
 
 def preprocess(
