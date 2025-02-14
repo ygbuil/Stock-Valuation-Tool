@@ -9,7 +9,7 @@
                 "run",
                 "stock-valuation-tool",
                 "pipeline",
-                "--ticker", "CSU.TO",
+                "--ticker", "GOOG",
                 "--benchmark", "SPY",
                 "--data-source", "csv",
             ],

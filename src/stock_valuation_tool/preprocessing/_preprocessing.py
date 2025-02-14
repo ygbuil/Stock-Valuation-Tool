@@ -20,12 +20,12 @@ def preprocess(
     config = _load_config(Path("config/config.json"))
 
     start_date = pd.Timestamp.today().normalize() - pd.DateOffset(years=config.past_years)
-    prices = _load_prices(ticker, start_date)
+    prices, splits = _load_prices(ticker, start_date)
 
-    benchmark_prices = _load_prices(benchmark, start_date)
+    benchmark_prices, _ = _load_prices(benchmark, start_date)
 
     if data_source == "api":
-        income_statement = _get_fundamental_data(ticker)
+        income_statement = _get_fundamental_data(ticker, splits)
         income_statement.to_csv(
             PATH_DATA_IN / f"income_statement_{ticker.replace('.', '')}.csv", index=False
         )
@@ -61,7 +61,7 @@ def _load_config(config_path: Path) -> Config:
         return Config(**json.load(file))
 
 
-def _get_fundamental_data(ticker: str) -> pd.DataFrame:
+def _get_fundamental_data(ticker: str, splits: pd.DataFrame) -> pd.DataFrame:
     fd = FundamentalData(key="None", output_format="json")
 
     income_statement: pd.DataFrame = (
@@ -82,7 +82,16 @@ def _get_fundamental_data(ticker: str) -> pd.DataFrame:
         )
         .assign(
             date=lambda df: pd.to_datetime(df["date"]),
-            shares_outstanding=lambda df: pd.to_numeric(df["shares_outstanding"]),
+        )
+        .merge(splits, on="date", how="left")
+        .assign(
+            split_cumsum=lambda df: df["split_cumsum"]
+            .shift(1)
+            .fillna(
+                1
+            ),  # for some reason post-split shares_outstanding are reported one quarter before the split, hence the shift # noqa: E501
+            shares_outstanding=lambda df: pd.to_numeric(df["shares_outstanding"])
+            * df["split_cumsum"],
         )
     )
 
@@ -125,7 +134,7 @@ def _calculate_ttm(data: pd.DataFrame) -> pd.DataFrame:
 def _load_prices(
     ticker: str,
     start_date: pd.Timestamp,
-) -> pd.DataFrame:
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Load the following daily data at market close for a given ticker:
         - Unadjusted asset price.
         - Stock splits.
@@ -157,13 +166,14 @@ def _load_prices(
     try:
         asset = yf.Ticker(ticker)
         asset_data = (
-            asset.history(start=start_date)[["Close", "Volume"]]
+            asset.history(start=start_date)[["Close", "Stock Splits"]]
             .sort_index(ascending=False)
             .reset_index()
             .rename(
                 columns={
                     "Date": "date",
                     "Close": "close_adj_origin_currency",
+                    "Stock Splits": "split",
                 },
             )
             .assign(date=lambda df: pd.to_datetime(df["date"].dt.strftime("%Y-%m-%d")))
@@ -172,15 +182,20 @@ def _load_prices(
         msg = f"Something went wrong retrieving Yahoo Finance data for ticker {ticker}: {exc}"
         raise YahooFinanceError(msg) from exc
 
-    return full_date_range.merge(
+    full_data = full_date_range.merge(
         asset_data,
         "left",
         on="date",
     ).assign(
         close_adj_origin_currency=lambda df: df["close_adj_origin_currency"].bfill().ffill(),
-    )[
+    )
+
+    return full_data[
         [
             "date",
             "close_adj_origin_currency",
         ]
-    ]
+    ], full_data[["date", "split"]].assign(
+        split=lambda df: df["split"].fillna(1).replace(0, 1),
+        split_cumsum=lambda df: df["split"].cumprod().shift(1).fillna(1),
+    ).drop(columns=["split"])
