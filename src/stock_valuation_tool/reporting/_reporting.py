@@ -107,7 +107,7 @@ def _plot_funadamentals_projections(config: Config, all_fundamentals: pd.DataFra
         color="green",
         marker="o",
         linestyle="-",
-        label="Share price exp pe",
+        label="Share price expanding pe",
         zorder=2,
     )
     price.plot(

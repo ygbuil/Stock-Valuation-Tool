@@ -9,7 +9,7 @@
             "program": "${workspaceFolder}/.venv/bin/stock-valuation-tool",
             "args": [
                 "pipeline",
-                "--ticker", "GOOG",
+                "--ticker", "INTU",
                 "--benchmark", "SPY",
                 "--data-source", "csv",
             ],
