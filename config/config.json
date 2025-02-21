@@ -1,6 +1,6 @@
 {
     "modelling": {
-        "eps": "linear",
+        "eps": "auto",
         "pe": "linear"
     },
     "past_years": 10,

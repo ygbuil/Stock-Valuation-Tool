@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from loguru import logger
 from sklearn.linear_model import LinearRegression  # type: ignore
 from sklearn.metrics import mean_squared_error  # type: ignore
 
@@ -178,21 +179,28 @@ def _model_selection(
             exp.train(y)
             return exp
         case "auto":
-            train_size = int(past_periods * 0.8)
-            X_train, X_test, y_train, y_test = (  # noqa: N806
-                X[:train_size],
-                X[train_size:],
-                y[:train_size],
-                y[train_size:],
-            )
+            rmse_lin_reg, rmse_exp = [], []
 
-            lin_reg = LinReg()
-            lin_reg.train(X_train, y_train)
-            rmse_lin_reg = np.sqrt(mean_squared_error(lin_reg.predict(X_test), y_test))
+            # cross-validation
+            for train_perc in [0.5, 0.8]:
+                train_size = int(past_periods * train_perc)
+                X_train, X_test, y_train, y_test = (  # noqa: N806
+                    X[:train_size],
+                    X[train_size:],
+                    y[:train_size],
+                    y[train_size:],
+                )
 
-            exp = ExponentialModel()
-            exp.train(y_train)
-            rmse_exp = np.sqrt(mean_squared_error(exp.predict(len(y_test)), y_test))
+                lin_reg = LinReg()
+                lin_reg.train(X_train, y_train)
+                rmse_lin_reg.append(np.sqrt(mean_squared_error(lin_reg.predict(X_test), y_test)))
+
+                exp = ExponentialModel()
+                exp.train(y_train)
+                rmse_exp.append(np.sqrt(mean_squared_error(exp.predict(len(y_test)), y_test)))
+
+            rmse_lin_reg, rmse_exp = np.mean(rmse_lin_reg), np.mean(rmse_exp)
+            logger.info(f"RMSE lin_reg: {rmse_lin_reg}. RMSE exp: {rmse_exp}")
 
             if rmse_lin_reg < rmse_exp:
                 config.modelling[modelling_type] = "linear"
