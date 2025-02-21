@@ -38,3 +38,19 @@ class InvalidOptionError(Exception):
             msg: Custom error message. Defaults to None.
         """
         super().__init__(msg or "The option provided is not valid.")
+
+
+class InvalidInputDataError(Exception):
+    """Provided an invalid option."""
+
+    def __init__(self, msg: None | str = None) -> None:
+        """Provide the error message or return default.
+
+        Args:
+            self: Own class.
+            msg: Custom error message. Defaults to None.
+        """
+        super().__init__(
+            msg
+            or "Can not run ExponentialModel with the provided data due to a negative squared root."
+        )

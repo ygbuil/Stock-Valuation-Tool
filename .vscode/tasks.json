@@ -9,9 +9,9 @@
                 "run",
                 "stock-valuation-tool",
                 "pipeline",
-                "--ticker", "INTU",
+                "--ticker", "SPGI",
                 "--benchmark", "SPY",
-                "--data-source", "csv",
+                "--data-source", "api",
             ],
             "problemMatcher": []
         }

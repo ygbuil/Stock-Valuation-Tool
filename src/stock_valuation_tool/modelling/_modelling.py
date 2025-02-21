@@ -4,7 +4,7 @@ from loguru import logger
 from sklearn.linear_model import LinearRegression  # type: ignore
 from sklearn.metrics import mean_squared_error  # type: ignore
 
-from stock_valuation_tool.exceptions import InvalidOptionError
+from stock_valuation_tool.exceptions import InvalidInputDataError, InvalidOptionError
 from stock_valuation_tool.utils import Config
 
 
@@ -151,7 +151,12 @@ class ExponentialModel:
 
     def train(self, y_train: list[float]) -> None:
         self.latest_point = y_train[-1]
-        self.cqgr = (y_train[-1] / y_train[0]) ** (1 / len(y_train))
+
+        perc_growts = y_train[-1] / y_train[0]
+        if perc_growts < 0:
+            raise InvalidInputDataError
+
+        self.cqgr = perc_growts ** (1 / len(y_train))
 
     def predict(self, periods: int) -> list[float]:
         pred = [self.latest_point]
