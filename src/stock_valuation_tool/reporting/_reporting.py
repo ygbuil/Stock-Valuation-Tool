@@ -62,6 +62,12 @@ def _plot_funadamentals_projections(config: Config, all_fundamentals: pd.DataFra
     eps_and_pe.set_xticks(index)
     eps_and_pe.set_xticklabels(dates, rotation=80)
 
+    top_y_lim = max(eps)
+    bottom_y_lim = min([*eps, 0])
+    margin = (abs(top_y_lim) + abs(bottom_y_lim)) * 0.25
+    top_y_lim += margin
+    eps_and_pe.set_ylim((bottom_y_lim, top_y_lim))
+
     # Secondary Y-axis for PE
     eps_and_peb = eps_and_pe.twinx()
     eps_and_peb.plot(
@@ -83,6 +89,12 @@ def _plot_funadamentals_projections(config: Config, all_fundamentals: pd.DataFra
         zorder=2,
     )
     eps_and_peb.set_ylabel("PE Ratio")
+
+    top_y_lim = max(pe_ct + pe_exp)
+    bottom_y_lim = min(pe_ct + pe_exp + [0])
+    margin = (abs(top_y_lim) + abs(bottom_y_lim)) * 0.25
+    top_y_lim += margin
+    eps_and_peb.set_ylim((bottom_y_lim, top_y_lim))
 
     # Legends
     eps_and_pe.legend(
