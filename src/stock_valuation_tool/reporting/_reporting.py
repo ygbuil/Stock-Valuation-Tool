@@ -76,7 +76,7 @@ def _plot_funadamentals_projections(config: Config, all_fundamentals: pd.DataFra
         color="green",
         marker="s",
         linestyle="-",
-        label=f"PE (modelling: {config.modelling['pe_expansion']})",
+        label=f"PE (modelling: {config.modelling['pe_expansion']['model']})",
         zorder=2,
     )
     eps_and_peb.plot(
@@ -85,7 +85,7 @@ def _plot_funadamentals_projections(config: Config, all_fundamentals: pd.DataFra
         color="red",
         marker="s",
         linestyle="-",
-        label=f"PE (modelling: {config.modelling['pe_ct']})",
+        label=f"PE (modelling: {config.modelling['pe_ct']['model']})",
         zorder=2,
     )
     eps_and_peb.set_ylabel("PE Ratio")
@@ -102,7 +102,7 @@ def _plot_funadamentals_projections(config: Config, all_fundamentals: pd.DataFra
             mpatches.Patch(color="blue", label="Past EPS"),
             mpatches.Patch(color="black", label="Current EPS"),
             mpatches.Patch(
-                color="orange", label=f"Future EPS (modelling: {config.modelling['eps']})"
+                color="orange", label=f"Future EPS (modelling: {config.modelling['eps']['model']})"
             ),
         ],
         loc="upper left",

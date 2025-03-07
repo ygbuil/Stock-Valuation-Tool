@@ -82,8 +82,8 @@ def _predict_future_funtamentals(
     past_fundamentals["period"] = "past"
     pe_ct = (
         past_fundamentals["pe"].median()
-        if config.modelling["pe_ct"] == "median"
-        else int(config.modelling["pe_ct"])
+        if config.modelling["pe_ct"]["model"] == "median"
+        else int(config.modelling["pe_ct"]["value"])
     )
 
     X, y_eps, y_pe = (  # noqa: N806
@@ -110,13 +110,13 @@ def _predict_future_funtamentals(
             else last_period_date + pd.DateOffset(months=3)
         )
 
-        match config.modelling["pe_expansion"]:
+        match config.modelling["pe_expansion"]["model"]:
             case "linear":
                 pe_exp_pred = model_pe.predict([[X_pred]])[0]  # type: ignore
             case "exp":
                 pe_exp_pred = model_pe.predict(i + 1)[-1]  # type: ignore
 
-        match config.modelling["eps"]:
+        match config.modelling["eps"]["model"]:
             case "linear":
                 eps_pred = model_eps.predict([[X_pred]])[0]  # type: ignore
             case "exp":
@@ -178,7 +178,7 @@ def _model_selection(
     past_periods: int,
     modelling_type: str,
 ) -> LinReg | ExponentialModel:
-    match config.modelling[modelling_type]:
+    match config.modelling[modelling_type]["model"]:
         case "linear":
             lin_reg = LinReg()
             lin_reg.train(X, y)
@@ -212,12 +212,12 @@ def _model_selection(
             logger.info(f"RMSE lin_reg: {rmse_lin_reg}. RMSE exp: {rmse_exp}")
 
             if rmse_lin_reg < rmse_exp:
-                config.modelling[modelling_type] = "linear"
+                config.modelling[modelling_type]["model"] = "linear"
                 lin_reg = LinReg()
                 lin_reg.train(X, y)
                 return lin_reg
 
-            config.modelling[modelling_type] = "exp"
+            config.modelling[modelling_type]["model"] = "exp"
             exp = ExponentialModel()
             exp.train(y)
             return exp

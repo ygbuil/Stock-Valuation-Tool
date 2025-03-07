@@ -30,12 +30,13 @@
         ],
         "pe_ct": [
             {
-                "active": true,
+                "active": false,
                 "model": "median"
             },
             {
-                "active": false,
-                "model": 10
+                "active": true,
+                "model": "custom",
+                "value": 20
             }
         ]
     },

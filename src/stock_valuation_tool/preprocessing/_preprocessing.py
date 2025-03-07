@@ -63,7 +63,7 @@ def _load_config(config_path: Path) -> Config:
     modelling = {}
 
     for metric, models in config["modelling"].items():
-        model = [model["model"] for model in models if model["active"]]
+        model = [model for model in models if model["active"]]
 
         if len(model) == 1:
             modelling[metric] = model[0]
