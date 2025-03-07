@@ -80,7 +80,11 @@ def _predict_future_funtamentals(
 ) -> pd.DataFrame:
     past_periods = len(past_fundamentals)
     past_fundamentals["period"] = "past"
-    pe_ct = past_fundamentals["pe"].median() if config.pe_ct == "median" else int(config.pe_ct)
+    pe_ct = (
+        past_fundamentals["pe"].median()
+        if config.modelling["pe_ct"] == "median"
+        else int(config.modelling["pe_ct"])
+    )
 
     X, y_eps, y_pe = (  # noqa: N806
         [[x] for x in range(past_periods)],

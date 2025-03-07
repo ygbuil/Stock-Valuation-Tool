@@ -77,7 +77,6 @@ def _load_config(config_path: Path) -> Config:
         past_years=config["past_years"],
         future_years=config["future_years"],
         freq=config["freq"],
-        pe_ct=config["pe_ct"],
     )
 
 

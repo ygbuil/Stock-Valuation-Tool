@@ -11,4 +11,3 @@ class Config:
     past_years: int
     future_years: int
     freq: str
-    pe_ct: str

@@ -11,7 +11,7 @@
                 "pipeline",
                 "--ticker", "PYPL",
                 "--benchmark", "SPY",
-                "--data-source", "api",
+                "--data-source", "csv",
             ],
             "problemMatcher": []
         }

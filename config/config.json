@@ -27,10 +27,19 @@
                 "active": false,
                 "model": "auto"
             }
+        ],
+        "pe_ct": [
+            {
+                "active": true,
+                "model": "median"
+            },
+            {
+                "active": false,
+                "model": 10
+            }
         ]
     },
     "past_years": 10,
     "future_years": 5,
-    "freq": "ttm",
-    "pe_ct": "median"
+    "freq": "ttm"
 }

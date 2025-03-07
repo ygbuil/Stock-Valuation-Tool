@@ -85,7 +85,7 @@ def _plot_funadamentals_projections(config: Config, all_fundamentals: pd.DataFra
         color="red",
         marker="s",
         linestyle="-",
-        label=f"PE (modelling: {config.pe_ct})",
+        label=f"PE (modelling: {config.modelling['pe_ct']})",
         zorder=2,
     )
     eps_and_peb.set_ylabel("PE Ratio")
