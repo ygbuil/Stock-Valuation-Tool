@@ -14,6 +14,17 @@
                 "model": "auto"
             }
         ],
+        "pe_ct": [
+            {
+                "active": false,
+                "model": "median"
+            },
+            {
+                "active": true,
+                "model": "custom",
+                "value": 20
+            }
+        ],
         "pe_expansion": [
             {
                 "active": true,
@@ -26,17 +37,6 @@
             {
                 "active": false,
                 "model": "auto"
-            }
-        ],
-        "pe_ct": [
-            {
-                "active": false,
-                "model": "median"
-            },
-            {
-                "active": true,
-                "model": "custom",
-                "value": 20
             }
         ]
     },
