@@ -88,7 +88,7 @@ def _predict_future_funtamentals(
         list(reversed(past_fundamentals["pe"])),
     )
     model_eps = _model_selection(config, X, y_eps, past_periods, "eps")
-    model_pe = _model_selection(config, X, y_pe, past_periods, "pe")
+    model_pe = _model_selection(config, X, y_pe, past_periods, "pe_expansion")
 
     last_period_date = past_fundamentals["date"].iloc[0]
     pred = []
@@ -106,7 +106,7 @@ def _predict_future_funtamentals(
             else last_period_date + pd.DateOffset(months=3)
         )
 
-        match config.modelling["pe"]:
+        match config.modelling["pe_expansion"]:
             case "linear":
                 pe_exp_pred = model_pe.predict([[X_pred]])[0]  # type: ignore
             case "exp":

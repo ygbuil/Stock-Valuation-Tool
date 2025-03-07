@@ -76,7 +76,7 @@ def _plot_funadamentals_projections(config: Config, all_fundamentals: pd.DataFra
         color="green",
         marker="s",
         linestyle="-",
-        label=f"PE (modelling: {config.modelling['pe']})",
+        label=f"PE (modelling: {config.modelling['pe_expansion']})",
         zorder=2,
     )
     eps_and_peb.plot(
