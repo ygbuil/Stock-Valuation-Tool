@@ -1,7 +1,33 @@
 {
     "modelling": {
-        "eps": "auto",
-        "pe": "linear"
+        "eps": [
+            {
+                "active": false,
+                "model": "linear"
+            },
+            {
+                "active": false,
+                "model": "exp"
+            },
+            {
+                "active": true,
+                "model": "auto"
+            }
+        ],
+        "pe": [
+            {
+                "active": true,
+                "model": "linear"
+            },
+            {
+                "active": false,
+                "model": "exp"
+            },
+            {
+                "active": false,
+                "model": "auto"
+            }
+        ]
     },
     "past_years": 10,
     "future_years": 5,

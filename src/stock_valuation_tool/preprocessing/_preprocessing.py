@@ -8,7 +8,7 @@ import yfinance as yf  # type: ignore
 from alpha_vantage.fundamentaldata import FundamentalData  # type: ignore
 from loguru import logger
 
-from stock_valuation_tool.exceptions import YahooFinanceError
+from stock_valuation_tool.exceptions import InvalidModelError, YahooFinanceError
 from stock_valuation_tool.utils import Config
 
 PATH_DATA_IN = Path("data/in")
@@ -58,7 +58,27 @@ def _load_config(config_path: Path) -> Config:
         Config dataclass with the info of config.json.
     """
     with (config_path).open() as file:
-        return Config(**json.load(file))
+        config = json.load(file)
+
+    modelling = {}
+
+    for metric, models in config["modelling"].items():
+        model = [model["model"] for model in models if model["active"]]
+
+        if len(model) == 1:
+            modelling[metric] = model[0]
+        elif len(model) > 1:
+            raise InvalidModelError(msg="Only one model can be active.")
+        else:
+            raise InvalidModelError(msg="No model is active.")
+
+    return Config(
+        modelling=modelling,
+        past_years=config["past_years"],
+        future_years=config["future_years"],
+        freq=config["freq"],
+        pe_ct=config["pe_ct"],
+    )
 
 
 def _get_fundamental_data(ticker: str, splits: pd.DataFrame) -> pd.DataFrame:

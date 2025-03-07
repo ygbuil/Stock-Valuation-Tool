@@ -9,7 +9,7 @@
                 "run",
                 "stock-valuation-tool",
                 "pipeline",
-                "--ticker", "SPGI",
+                "--ticker", "PYPL",
                 "--benchmark", "SPY",
                 "--data-source", "api",
             ],
