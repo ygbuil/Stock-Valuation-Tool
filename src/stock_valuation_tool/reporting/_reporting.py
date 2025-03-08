@@ -24,14 +24,12 @@ def _plot_funadamentals_projections(config: Config, all_fundamentals: pd.DataFra
         all_fundamentals: DataFrame containing "date", "eps", "period", "pe_ct", "pe_exp",
         "close_adj_origin_currency_pe_ct", and "close_adj_origin_currency_pe_exp".
     """
-    dates, eps, periods, pe_ct, pe_exp, close_pe_ct, close_pe_exp = (
+    dates, eps, periods, pe, close_price = (
         list(reversed([date.strftime("%Y-%m") for date in all_fundamentals["date"]])),
         list(reversed(all_fundamentals["eps"])),
         list(reversed(all_fundamentals["period"])),
-        list(reversed(all_fundamentals["pe_ct"])),
-        list(reversed(all_fundamentals["pe_exp"])),
-        list(reversed(all_fundamentals["close_adj_origin_currency_pe_ct"])),
-        list(reversed(all_fundamentals["close_adj_origin_currency_pe_exp"])),
+        list(reversed(all_fundamentals["pe"])),
+        list(reversed(all_fundamentals["close_adj_origin_currency"])),
     )
 
     time_series_dim = len(eps)
@@ -57,7 +55,7 @@ def _plot_funadamentals_projections(config: Config, all_fundamentals: pd.DataFra
                 eps_and_pe.bar(idx, height, bar_width, color="orange", zorder=3)
 
     eps_and_pe.set_ylabel("EPS")
-    eps_and_pe.set_title("EPS, PE Ratio, and Share Price Trends")
+    eps_and_pe.set_title("EPS, PE, and Share Price Trends")
 
     eps_and_pe.set_xticks(index)
     eps_and_pe.set_xticklabels(dates, rotation=80)
@@ -72,26 +70,17 @@ def _plot_funadamentals_projections(config: Config, all_fundamentals: pd.DataFra
     eps_and_peb = eps_and_pe.twinx()
     eps_and_peb.plot(
         index,
-        pe_exp,
-        color="green",
-        marker="s",
-        linestyle="-",
-        label=f"PE (modelling: {config.modelling['pe_expansion']['model']})",
-        zorder=2,
-    )
-    eps_and_peb.plot(
-        index,
-        pe_ct,
+        pe,
         color="red",
         marker="s",
         linestyle="-",
-        label=f"PE (modelling: {config.modelling['pe_ct']['model']})",
+        label=f"PE (modelling: {config.modelling['pe']['model']})",
         zorder=2,
     )
-    eps_and_peb.set_ylabel("PE Ratio")
+    eps_and_peb.set_ylabel("PE")
 
-    top_y_lim = max(pe_ct + pe_exp)
-    bottom_y_lim = min(pe_ct + pe_exp + [0])
+    top_y_lim = max(pe)
+    bottom_y_lim = min([*pe, 0])
     margin = (abs(top_y_lim) + abs(bottom_y_lim)) * 0.25
     top_y_lim += margin
     eps_and_peb.set_ylim((bottom_y_lim, top_y_lim))
@@ -115,20 +104,11 @@ def _plot_funadamentals_projections(config: Config, all_fundamentals: pd.DataFra
 
     price.plot(
         index,
-        close_pe_exp,
-        color="green",
-        marker="o",
-        linestyle="-",
-        label="Share price expanding pe",
-        zorder=2,
-    )
-    price.plot(
-        index,
-        close_pe_ct,
+        close_price,
         color="red",
         marker="o",
         linestyle="-",
-        label="Share price ct pe",
+        label="Share price",
         zorder=2,
     )
 

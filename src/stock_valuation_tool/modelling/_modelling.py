@@ -21,25 +21,15 @@ def modelling(
 
     predicted_fundamentals = _predict_future_funtamentals(config, past_fundamentals)
 
-    past_fundamentals = (
-        pd.concat(
-            [
-                past_fundamentals.iloc[[0]].assign(
-                    date=current_date, close_adj_origin_currency=current_price, period="present"
-                ),
-                past_fundamentals,
-            ],
-            ignore_index=True,
-        )
-        .assign(
-            close_adj_origin_currency_pe_ct=lambda df: df["close_adj_origin_currency"],
-            close_adj_origin_currency_pe_exp=lambda df: df["close_adj_origin_currency"],
-            pe_ct=lambda df: df["pe"],
-            pe_exp=lambda df: df["pe"],
-        )
-        .drop(columns=["pe", "close_adj_origin_currency"])
+    past_fundamentals = pd.concat(
+        [
+            past_fundamentals.iloc[[0]].assign(
+                date=current_date, close_adj_origin_currency=current_price, period="present"
+            ),
+            past_fundamentals,
+        ],
+        ignore_index=True,
     )
-
     all_fundamentals = pd.concat(
         [
             predicted_fundamentals,
@@ -55,18 +45,16 @@ def modelling(
         [
             {
                 "date": end_of_simulation_date,
-                "return_pe_ct": (
-                    all_fundamentals["close_adj_origin_currency_pe_ct"].iloc[0] / current_price - 1
-                )
-                * 100,
-                "return_pe_exp": (
-                    all_fundamentals["close_adj_origin_currency_pe_exp"].iloc[0] / current_price - 1
-                )
-                * 100,
-                "return_becnhmark": (
-                    (yearly_return ** ((end_of_simulation_date - current_date).days / 365)) - 1
-                )
-                * 100,
+                "return": round(
+                    (all_fundamentals["close_adj_origin_currency"].iloc[0] / current_price - 1)
+                    * 100,
+                    2,
+                ),
+                "return_becnhmark": round(
+                    ((yearly_return ** ((end_of_simulation_date - current_date).days / 365)) - 1)
+                    * 100,
+                    2,
+                ),
             }
         ]
     )
@@ -80,11 +68,6 @@ def _predict_future_funtamentals(
 ) -> pd.DataFrame:
     past_periods = len(past_fundamentals)
     past_fundamentals["period"] = "past"
-    pe_ct = (
-        past_fundamentals["pe"].median()
-        if config.modelling["pe_ct"]["model"] == "median"
-        else int(config.modelling["pe_ct"]["value"])
-    )
 
     X, y_eps, y_pe = (  # noqa: N806
         [[x] for x in range(past_periods)],
@@ -92,7 +75,7 @@ def _predict_future_funtamentals(
         list(reversed(past_fundamentals["pe"])),
     )
     model_eps = _model_selection(config, X, y_eps, past_periods, "eps")
-    model_pe = _model_selection(config, X, y_pe, past_periods, "pe_expansion")
+    model_pe = _model_selection(config, X, y_pe, past_periods, "pe")
 
     last_period_date = past_fundamentals["date"].iloc[0]
     pred = []
@@ -110,11 +93,13 @@ def _predict_future_funtamentals(
             else last_period_date + pd.DateOffset(months=3)
         )
 
-        match config.modelling["pe_expansion"]["model"]:
+        match config.modelling["pe"]["model"]:
             case "linear":
-                pe_exp_pred = model_pe.predict([[X_pred]])[0]  # type: ignore
+                pe_pred = model_pe.predict([[X_pred]])[0]  # type: ignore
             case "exp" | "custom_cagr":
-                pe_exp_pred = model_pe.predict(i + 1)[-1]  # type: ignore
+                pe_pred = model_pe.predict(i + 1)[-1]  # type: ignore
+            case "median" | "custom_pe":
+                pe_pred = model_pe.predict()  # type: ignore
 
         match config.modelling["eps"]["model"]:
             case "linear":
@@ -126,10 +111,8 @@ def _predict_future_funtamentals(
             {
                 "date": last_period_date,
                 "eps": eps_pred,
-                "close_adj_origin_currency_pe_ct": eps_pred * pe_ct,
-                "close_adj_origin_currency_pe_exp": eps_pred * pe_exp_pred,
-                "pe_ct": pe_ct,
-                "pe_exp": pe_exp_pred,
+                "close_adj_origin_currency": eps_pred * pe_pred,
+                "pe": pe_pred,
                 "period": "future",
             }
         )
@@ -146,6 +129,28 @@ class LinReg:
 
     def predict(self, value: list[list[int]]) -> float:
         return self.lin_reg.predict(value)  # type: ignore
+
+
+class MedianPeModel:
+    def __ini__(self) -> None:
+        self.median = 0.0
+
+    def train(self, y_train: list[float]) -> None:
+        self.median = float(np.median(y_train))
+
+    def predict(self) -> float:
+        return self.median
+
+
+class CustomPeModel:
+    def __ini__(self) -> None:
+        self.custom_pe = 0.0
+
+    def train(self, custom_pe: float) -> None:
+        self.custom_pe = custom_pe
+
+    def predict(self) -> float:
+        return self.custom_pe
 
 
 class ExponentialModel:
@@ -171,14 +176,22 @@ class ExponentialModel:
         return pred[1:]
 
 
-def _model_selection(
+def _model_selection(  # noqa: PLR0911
     config: Config,
     X: list[list[int]],  # noqa: N803
     y: list[float],
     past_periods: int,
     modelling_type: str,
-) -> LinReg | ExponentialModel:
+) -> LinReg | ExponentialModel | MedianPeModel | CustomPeModel:
     match config.modelling[modelling_type]["model"]:
+        case "median":
+            median_pe = MedianPeModel()
+            median_pe.train(y)
+            return median_pe
+        case "custom_pe":
+            custom_pe = CustomPeModel()
+            custom_pe.train(config.modelling[modelling_type]["value"])
+            return custom_pe
         case "linear":
             lin_reg = LinReg()
             lin_reg.train(X, y)
