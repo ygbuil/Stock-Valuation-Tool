@@ -10,8 +10,13 @@
                 "model": "exp"
             },
             {
-                "active": true,
+                "active": false,
                 "model": "auto"
+            },
+            {
+                "active": true,
+                "model": "custom_cagr",
+                "value": 30
             }
         ],
         "pe_ct": [

@@ -113,13 +113,13 @@ def _predict_future_funtamentals(
         match config.modelling["pe_expansion"]["model"]:
             case "linear":
                 pe_exp_pred = model_pe.predict([[X_pred]])[0]  # type: ignore
-            case "exp":
+            case "exp" | "custom_cagr":
                 pe_exp_pred = model_pe.predict(i + 1)[-1]  # type: ignore
 
         match config.modelling["eps"]["model"]:
             case "linear":
                 eps_pred = model_eps.predict([[X_pred]])[0]  # type: ignore
-            case "exp":
+            case "exp" | "custom_cagr":
                 eps_pred = model_eps.predict(i + 1)[-1]  # type: ignore
 
         pred.append(
@@ -149,9 +149,9 @@ class LinReg:
 
 
 class ExponentialModel:
-    def __init__(self) -> None:
-        self.latest_point = 0.0
-        self.cqgr = 0.0
+    def __init__(self, cqgr: float = 0.0, latest_point: float = 0.0) -> None:
+        self.cqgr = cqgr
+        self.latest_point = latest_point
 
     def train(self, y_train: list[float]) -> None:
         self.latest_point = y_train[-1]
@@ -221,6 +221,11 @@ def _model_selection(
             exp = ExponentialModel()
             exp.train(y)
             return exp
+        case "custom_cagr":
+            return ExponentialModel(
+                cqgr=(config.modelling[modelling_type]["value"] / 100 + 1) ** 0.25,
+                latest_point=y[-1],
+            )
         case _:
             raise InvalidOptionError
 
