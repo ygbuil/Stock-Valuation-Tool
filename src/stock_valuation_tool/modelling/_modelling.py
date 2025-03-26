@@ -165,7 +165,7 @@ class ExponentialModel:
         if perc_growts < 0:
             raise InvalidInputDataError
 
-        self.cqgr = perc_growts ** (1 / len(y_train))
+        self.cqgr = round(perc_growts ** (1 / len(y_train)), 4)
 
     def predict(self, periods: int) -> list[float]:
         pred = [self.latest_point]
@@ -173,7 +173,7 @@ class ExponentialModel:
         for _ in range(periods):
             pred.append(pred[-1] * self.cqgr)
 
-        return pred[1:]
+        return [round(x, 4) for x in pred[1:]]
 
 
 def _model_selection(  # noqa: PLR0911

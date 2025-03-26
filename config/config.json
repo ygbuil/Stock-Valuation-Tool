@@ -2,7 +2,7 @@
     "modelling": {
         "eps": [
             {
-                "active": false,
+                "active": true,
                 "model": "linear"
             },
             {
@@ -14,20 +14,20 @@
                 "model": "auto"
             },
             {
-                "active": true,
+                "active": false,
                 "model": "custom_cagr",
                 "value": 30
             }
         ],
         "pe": [
             {
-                "active": false,
+                "active": true,
                 "model": "median"
             },
             {
-                "active": true,
+                "active": false,
                 "model": "custom_pe",
-                "value": 20
+                "value": 25
             },
             {
                 "active": false,

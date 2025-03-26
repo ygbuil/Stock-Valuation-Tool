@@ -9,7 +9,7 @@
                 "run",
                 "stock-valuation-tool",
                 "pipeline",
-                "--ticker", "PYPL",
+                "--ticker", "MSCI",
                 "--benchmark", "SPY",
                 "--data-source", "csv",
             ],
