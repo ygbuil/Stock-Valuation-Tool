@@ -10,7 +10,7 @@ from stock_valuation_tool.utils import timer
 @click.command()
 @click.option("--ticker")
 @click.option("--benchmark")
-@click.option("--data-source")
+@click.option("--data-source", type=click.Choice(["api", "csv"]))
 def pipeline(ticker: str, benchmark: str, data_source: str) -> None:
     """Entry point for pipeline.
 
