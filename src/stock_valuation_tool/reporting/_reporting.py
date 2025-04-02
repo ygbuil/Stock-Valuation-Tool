@@ -112,7 +112,7 @@ def _plot_funadamentals_projections(config: Config, all_fundamentals: pd.DataFra
         zorder=2,
     )
 
-    price.set_ylabel("Share Price PE")
+    price.set_ylabel("Share Price")
     price.legend(loc="upper left")
 
     # X-axis labels

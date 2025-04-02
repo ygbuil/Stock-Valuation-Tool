@@ -3,7 +3,7 @@
 import pytest
 from pytest import FixtureRequest  # noqa: PT013
 
-from stock_valuation_tool.modelling._modelling import ExponentialModel
+from stock_valuation_tool.modelling._models import ExponentialModel
 
 
 @pytest.fixture

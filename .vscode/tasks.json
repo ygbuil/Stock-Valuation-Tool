@@ -11,7 +11,7 @@
                 "pipeline",
                 "--ticker", "MSCI",
                 "--benchmark", "SPY",
-                "--data-source", "csv",
+                "--data-source", "api",
             ],
             "problemMatcher": []
         }
